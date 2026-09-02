@@ -153,6 +153,26 @@ Rectangle {
         property color borderColor: root.glassBorder
         property real borderWidth: 1.2 * s
 
+        readonly property real screenX: {
+            var p = glassBackdrop;
+            var _d = 0;
+            while (p && p !== root) {
+                _d += p.x + p.y + p.width + p.height + p.scale;
+                p = p.parent;
+            }
+            return glassBackdrop.mapToItem(root, 0, 0).x;
+        }
+
+        readonly property real screenY: {
+            var p = glassBackdrop;
+            var _d = 0;
+            while (p && p !== root) {
+                _d += p.x + p.y + p.width + p.height + p.scale;
+                p = p.parent;
+            }
+            return glassBackdrop.mapToItem(root, 0, 0).y;
+        }
+
         layer.enabled: root.glassBlurEnabled
         layer.effect: OpacityMask {
             maskSource: Rectangle {
@@ -169,8 +189,8 @@ Rectangle {
             live: true
             recursive: false
             sourceRect: Qt.rect(
-                glassBackdrop.mapToItem(root, 0, 0).x,
-                glassBackdrop.mapToItem(root, 0, 0).y,
+                glassBackdrop.screenX,
+                glassBackdrop.screenY,
                 glassBackdrop.width,
                 glassBackdrop.height
             )
@@ -544,11 +564,11 @@ Rectangle {
     }
     }
 
-    // Shared Gaussian Blur Source for Frosted Glass Cards
+    // Shared Gaussian Blur Source for Frosted Glass Cards (Live Screen Scene FBO)
     FastBlur {
         id: fullGlassBlur
         anchors.fill: parent
-        source: bgSharp
+        source: bgSceneLayer
         radius: root.glassBlurRadius
         visible: false
     }
