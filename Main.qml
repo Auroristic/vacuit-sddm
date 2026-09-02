@@ -270,12 +270,23 @@ Rectangle {
     // ──────────────────────────────────────────
     // Real SDDM Models for Users & Sessions (Zero Mock Data!)
     // ──────────────────────────────────────────
+    function getSystemUser() {
+        if (typeof userModel !== "undefined") {
+            if (userModel.lastUser && userModel.lastUser !== "") return userModel.lastUser
+            if (userModel.count > 0) {
+                var first = userModel.data(userModel.index(0, 0), Qt.UserRole + 1)
+                if (first) return first
+            }
+        }
+        return "retro"
+    }
+
     function getUserAvatar(uLogin, sddmIcon) {
         // Always prioritize user's actual ~/.face before SDDM generic silhouette fallback!
         if (sddmIcon && sddmIcon !== "" && sddmIcon.indexOf("/usr/share/sddm/faces/") === -1) {
             return sddmIcon
         }
-        var login = uLogin || "retro"
+        var login = uLogin || root.getSystemUser()
         return "file:///home/" + login + "/.face"
     }
 
@@ -288,7 +299,8 @@ Rectangle {
                 icon: userHelper.currentItem.uIcon
             }
         }
-        return { name: "retro", realName: "retro", icon: "file:///home/retro/.face" }
+        var fallbackUser = root.getSystemUser()
+        return { name: fallbackUser, realName: fallbackUser, icon: "file:///home/" + fallbackUser + "/.face" }
     }
 
     ListView {
@@ -300,8 +312,8 @@ Rectangle {
         height: 1
         z: -100
         delegate: Item {
-            property string uLogin: (typeof model !== "undefined" && model.name) ? model.name : "retro"
-            property string uName: (typeof model !== "undefined" && (model.realName || model.name)) ? (model.realName || model.name) : "retro"
+            property string uLogin: (typeof model !== "undefined" && model.name) ? model.name : root.getSystemUser()
+            property string uName: (typeof model !== "undefined" && (model.realName || model.name)) ? (model.realName || model.name) : uLogin
             property string uIcon: root.getUserAvatar(uLogin, (typeof model !== "undefined" && model.icon) ? model.icon : "")
         }
     }
@@ -1849,8 +1861,8 @@ Rectangle {
                 id: userListRepeater
                 model: typeof userModel !== "undefined" ? userModel : 1
                 delegate: Rectangle {
-                    property string itemLogin: (typeof model !== "undefined" && model.name) ? model.name : "retro"
-                    property string itemRealName: (typeof model !== "undefined" && (model.realName || model.name)) ? (model.realName || model.name) : "retro"
+                    property string itemLogin: (typeof model !== "undefined" && model.name) ? model.name : ((typeof userModel !== "undefined" && userModel.lastUser) ? userModel.lastUser : "user")
+                    property string itemRealName: (typeof model !== "undefined" && (model.realName || model.name)) ? (model.realName || model.name) : itemLogin
                     width: parent.width
                     height: 38 * s
                     radius: 10 * s
