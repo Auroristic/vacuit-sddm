@@ -518,8 +518,8 @@ Rectangle {
         id: ambientShapesContainer
         anchors.fill: parent
         visible: root.showLavaBlobs
-        opacity: root.isUnlocked ? 0.22 : 0.38
-        Behavior on opacity { NumberAnimation { duration: 600 } }
+        opacity: root.isUnlocked ? 0.75 : 0.45
+        Behavior on opacity { NumberAnimation { duration: 650; easing.type: Easing.OutCubic } }
 
         Repeater {
             model: 7
@@ -545,7 +545,7 @@ Rectangle {
                         MaterialShape.Cookie4Sided,
                         MaterialShape.ClamShell
                     ][index % 7]
-                    color: Qt.alpha(root.accentColor, 0.22)
+                    color: Qt.alpha(root.accentColor, 0.35)
                     animationDuration: 800
                 }
 
