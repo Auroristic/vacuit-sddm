@@ -1420,7 +1420,7 @@ Rectangle {
 
                                         Timer {
                                             id: morphTimer
-                                            interval: 1000 // 1-second cooldown per Android 14 / M3 spec!
+                                            interval: 500 // 0.5-second cooldown per user preference!
                                             repeat: false
                                             onTriggered: {
                                                 dotWrapper.isMorphedToCircle = true
@@ -1450,11 +1450,11 @@ Rectangle {
                                             color: "#ffffff"
                                             scale: dotWrapper.isShown ? 1.0 : 0.0
                                             rotation: dotWrapper.isShown ? (dotWrapper.isMorphedToCircle ? 0 : 15) : -25
-                                            animationDuration: 300
+                                            animationDuration: 250
 
-                                            Behavior on width { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+                                            Behavior on width { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
                                             Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
-                                            Behavior on rotation { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+                                            Behavior on rotation { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
                                         }
                                     }
                                 }
@@ -1500,12 +1500,12 @@ Rectangle {
                         }
                     }
 
-                    // Submit Action Arrow Pill (Morphs into M3 Arrowhead when typing!)
+                    // Submit Action Arrow Pill (Morphs into authentic M3 Arrowhead when typing!)
                     Item {
                         id: submitArrow
                         z: 10
-                        width: 34 * s
-                        height: 34 * s
+                        width: 32 * s
+                        height: 32 * s
                         anchors.right: parent.right
                         anchors.rightMargin: 8 * s
                         anchors.verticalCenter: parent.verticalCenter
@@ -1516,22 +1516,24 @@ Rectangle {
 
                         MaterialShape {
                             anchors.fill: parent
-                            shape: passwordInput.text.length > 0 ? MaterialShape.Triangle : MaterialShape.Circle
+                            shape: passwordInput.text.length > 0 ? MaterialShape.Arrow : MaterialShape.Circle
                             rotation: passwordInput.text.length > 0 ? 90 : 0
                             color: passwordInput.text.length > 0 ? root.accentColor : (submitMa.containsMouse ? Qt.alpha(root.accentColor, 0.25) : Qt.rgba(1, 1, 1, 0.08))
-                            animationDuration: 300
+                            animationDuration: 280
 
                             Behavior on color { ColorAnimation { duration: 200 } }
-                            Behavior on rotation { NumberAnimation { duration: 300; easing.type: Easing.OutBack } }
+                            Behavior on rotation { NumberAnimation { duration: 280; easing.type: Easing.OutBack } }
                         }
 
                         Text {
                             anchors.centerIn: parent
-                            anchors.horizontalCenterOffset: passwordInput.text.length > 0 ? 1 * s : 0
                             text: "󰁔"
                             font.family: root.monoFont
                             font.pixelSize: 14 * s
-                            color: passwordInput.text.length > 0 ? "#ffffff" : (submitMa.containsMouse ? "#ffffff" : root.textMuted)
+                            color: submitMa.containsMouse ? "#ffffff" : root.textMuted
+                            opacity: passwordInput.text.length > 0 ? 0.0 : 1.0
+                            visible: opacity > 0
+                            Behavior on opacity { NumberAnimation { duration: 180 } }
                         }
 
                         MouseArea {
