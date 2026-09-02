@@ -164,12 +164,17 @@ Build a production-grade, bug-free, high-performance SDDM Qt6 theme based on Cae
 - Morph Avatar Frame: Expand avatar frame smoothly into user switcher list modal. (Completed)
 
 ### Task 5: Caelestia Glass Settings Hub UI (Completed and Verified)
-- Redesign the Settings modal into organized glass tabs: (Completed)
-  - Tab 1: Clock (Style, 9-Grid Position, Scale Slider, Background Card Toggle & Opacity, Show on Login).
-  - Tab 2: Login & Box (9-Grid Position, Scale Slider, Avatar Orientation, Box Style, Background Card Toggle).
-  - Tab 3: Avatar (Shape Selector with 11 M3 shapes including Triangle, Live Shape Preview).
-  - Tab 4: Themes & Palette (Preset Color Schemes, 12h/24h toggle, Ambient Lava Blobs toggle).
-- Verified with qmllint: 0 errors, 0 warnings.
-- Verified live with sddm-greeter-qt6 in test mode.
-- Synchronized with /home/retro/qylock/themes/blewh-glass/Main.qml.
-
+- Restored authentic Nothing OS / Caelestia accordion settings hub: (Completed)
+  - Morphing container anchored to the bottom-left gear button with dynamic height animation.
+  - Tab 1: Clock (Style, 9-Grid Position, Scale Slider, Frosted Card Toggle).
+  - Tab 2: Login & Box (Input Box Shape, 9-Grid Position, Avatar Placement, Scale Slider, Frosted Card Toggle).
+  - Tab 3: Avatar (11 M3 shapes including Triangle, Live Shape Preview).
+  - Tab 4: Themes & Display (Color Palette with color swatches, 12h/24h toggle, Ambient Lava Lamp toggle).
+  - Authentic stacked frosted pill rows with split badges and rotating chevrons (`󰅀`).
+  - Toggle switches with sliding thumbs and micro checkmarks (`󰄬`/`󰅖`).
+- Universal Esc key navigation: closes drawers/settings/modals or locks back to intro clock screen. (Completed)
+- Standard OpacityMask used for avatar preview rendering. (Completed)
+- Verified with qmllint: 0 errors, 0 warnings. (Completed)
+- Verified live with sddm-greeter-qt6 in test mode. (Completed)
+- Synchronized with /home/retro/qylock/themes/blewh-glass/Main.qml. (Completed)
+- Connected and pushed to https://github.com/Auroristic/vacuit-sddm. (Completed)
