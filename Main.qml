@@ -416,46 +416,51 @@ Rectangle {
         Behavior on opacity { NumberAnimation { duration: 600; easing.type: Easing.OutCubic } }
     }
 
-    // Ambient floating lava lamp shapes
+    // Ambient floating lava lamp glowing blobs
     Item {
         id: ambientShapesContainer
         anchors.fill: parent
         visible: root.showLavaBlobs
-        opacity: root.isUnlocked ? 0.20 : 0.45
+        opacity: root.isUnlocked ? 0.50 : 0.85
         Behavior on opacity { NumberAnimation { duration: 600 } }
 
         Repeater {
-            model: 8
+            model: 7
             delegate: Rectangle {
                 id: shapeItem
-                property real initialX: (index * 240 + 70) * s
-                property real initialY: (index % 3 * 220 + 90) * s
-                property real targetY: initialY + (index % 2 === 0 ? 80 * s : -80 * s)
+                property real initialX: (index * 280 + 60) * s
+                property real initialY: ((index * 170) % 650 + 50) * s
+                property real targetX: initialX + (index % 2 === 0 ? 110 * s : -110 * s)
+                property real targetY: initialY + (index % 2 === 0 ? 150 * s : -130 * s)
                 x: initialX
                 y: initialY
-                width: (90 + (index % 4) * 35) * s
+                width: (200 + (index % 4) * 75) * s
                 height: width
-                radius: (index % 3 === 0) ? width / 2 : ((index % 2 === 0) ? 28 * s : 14 * s)
-                color: Qt.alpha(root.accentColor, 0.15)
-                border.color: Qt.alpha(root.accentColor, 0.25)
-                border.width: 1 * s
-                rotation: index * 45
+                radius: width / 2
+                color: Qt.alpha(root.accentColor, 0.28)
+                border.color: Qt.alpha(root.accentColor, 0.50)
+                border.width: 1.5 * s
+
+                layer.enabled: true
+                layer.effect: DropShadow {
+                    color: root.accentColor
+                    radius: 40
+                    samples: 20
+                    horizontalOffset: 0
+                    verticalOffset: 0
+                }
 
                 SequentialAnimation {
                     loops: Animation.Infinite
                     running: root.showLavaBlobs
-                    NumberAnimation { target: shapeItem; property: "y"; to: shapeItem.targetY; duration: 4500 + index * 800; easing.type: Easing.InOutSine }
-                    NumberAnimation { target: shapeItem; property: "y"; to: shapeItem.initialY; duration: 4500 + index * 800; easing.type: Easing.InOutSine }
-                }
-
-                NumberAnimation {
-                    target: shapeItem
-                    property: "rotation"
-                    from: 0
-                    to: 360
-                    duration: 18000 + index * 3000
-                    loops: Animation.Infinite
-                    running: root.showLavaBlobs
+                    ParallelAnimation {
+                        NumberAnimation { target: shapeItem; property: "x"; to: shapeItem.targetX; duration: 7500 + index * 1000; easing.type: Easing.InOutSine }
+                        NumberAnimation { target: shapeItem; property: "y"; to: shapeItem.targetY; duration: 6500 + index * 900; easing.type: Easing.InOutSine }
+                    }
+                    ParallelAnimation {
+                        NumberAnimation { target: shapeItem; property: "x"; to: shapeItem.initialX; duration: 7500 + index * 1000; easing.type: Easing.InOutSine }
+                        NumberAnimation { target: shapeItem; property: "y"; to: shapeItem.initialY; duration: 6500 + index * 900; easing.type: Easing.InOutSine }
+                    }
                 }
             }
         }
@@ -992,6 +997,10 @@ Rectangle {
                     border.width: root.boxStyle === "Minimal Underline" ? 0 : 1.5 * s
 
                     property real pressBloom: 0.0
+                    property real rippleScale: 0.0
+                    property real rippleOpacity: 0.0
+                    property real rippleX: width / 2
+                    property real rippleY: height / 2
 
                     layer.enabled: true
                     layer.effect: DropShadow {
@@ -1016,6 +1025,12 @@ Rectangle {
                         easing.type: Easing.OutQuad
                     }
 
+                    ParallelAnimation {
+                        id: rippleAnim
+                        NumberAnimation { target: passwordBoxRect; property: "rippleScale"; from: 0.1; to: 1.0; duration: 400; easing.type: Easing.OutCubic }
+                        NumberAnimation { target: passwordBoxRect; property: "rippleOpacity"; from: 0.45; to: 0.0; duration: 400; easing.type: Easing.OutQuad }
+                    }
+
                     // Inner Pill-Conforming Glow (Always matched to pill radius, zero rectangular clipping!)
                     Rectangle {
                         anchors.fill: parent
@@ -1023,6 +1038,25 @@ Rectangle {
                         color: Qt.alpha(root.accentColor, 0.35)
                         opacity: passwordBoxRect.pressBloom
                         visible: opacity > 0
+                    }
+
+                    // Pill-Conforming Expanding Radial Ripple (Centered on mouse click point!)
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: parent.radius
+                        clip: true
+                        color: "transparent"
+
+                        Rectangle {
+                            x: passwordBoxRect.rippleX - width / 2
+                            y: passwordBoxRect.rippleY - height / 2
+                            width: passwordBoxRect.width * 1.6 * passwordBoxRect.rippleScale
+                            height: width
+                            radius: width / 2
+                            color: Qt.alpha(root.accentColor, 0.30)
+                            opacity: passwordBoxRect.rippleOpacity
+                            visible: opacity > 0
+                        }
                     }
 
                     // Minimal Underline glowing bar
@@ -1138,9 +1172,16 @@ Rectangle {
                                     Item {
                                         id: dotWrapper
                                         property bool isShown: index < passwordInput.text.length
+                                        property var currentShape: root.passwordM3Shapes[Math.floor(Math.random() * root.passwordM3Shapes.length)]
                                         width: isShown ? 12 * s : 0
                                         height: 12 * s
                                         visible: width > 0
+
+                                        onIsShownChanged: {
+                                            if (isShown) {
+                                                currentShape = root.passwordM3Shapes[Math.floor(Math.random() * root.passwordM3Shapes.length)]
+                                            }
+                                        }
 
                                         Behavior on width {
                                             NumberAnimation { duration: 180; easing.type: Easing.OutBack }
@@ -1150,7 +1191,7 @@ Rectangle {
                                             anchors.centerIn: parent
                                             width: 10 * s
                                             height: 10 * s
-                                            shape: root.passwordM3Shapes[index % root.passwordM3Shapes.length]
+                                            shape: dotWrapper.currentShape
                                             color: "#ffffff"
                                             scale: dotWrapper.isShown ? 1.0 : 0.0
                                             rotation: dotWrapper.isShown ? 0 : -25
@@ -1194,16 +1235,19 @@ Rectangle {
                         }
                     }
 
-                    // Click Bloom Feedback (Zero Frame Overflow!)
+                    // Click Bloom & Radial Ripple Feedback across entire box
                     MouseArea {
                         id: boxPressMa
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.IBeamCursor
-                        z: -1
-                        onPressed: {
+                        z: 1
+                        onPressed: function(mouse) {
                             passwordInput.forceActiveFocus()
+                            passwordBoxRect.rippleX = mouse.x
+                            passwordBoxRect.rippleY = mouse.y
                             bloomAnim.restart()
+                            rippleAnim.restart()
                         }
                     }
 
@@ -1235,6 +1279,7 @@ Rectangle {
                     // Submit Action Arrow Pill
                     Rectangle {
                         id: submitArrow
+                        z: 10
                         width: 34 * s
                         height: 34 * s
                         radius: root.getBoxRadius(height)
