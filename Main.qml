@@ -36,6 +36,8 @@ Rectangle {
     property bool clockPosMenuOpen: false
     property bool loginPosMenuOpen: false
     property bool avatarOrientMenuOpen: false
+    property bool unlockAnimMenuOpen: false
+    property string unlockAnimStyle: "Kinetic Slide" // "Kinetic Slide", "Morph Dissolve", "Directional Sweep"
     property bool capsLock: false
     property bool is12Hour: true
     property bool showLavaBlobs: true
@@ -370,6 +372,7 @@ Rectangle {
         root.clockPosMenuOpen = false
         root.loginPosMenuOpen = false
         root.avatarOrientMenuOpen = false
+        root.unlockAnimMenuOpen = false
     }
 
     Timer {
@@ -407,7 +410,7 @@ Rectangle {
 
     function handleEscape() {
         if (root.shapeMenuOpen || root.paletteMenuOpen || root.boxMenuOpen ||
-            root.clockStyleMenuOpen || root.clockPosMenuOpen || root.loginPosMenuOpen || root.avatarOrientMenuOpen) {
+            root.clockStyleMenuOpen || root.clockPosMenuOpen || root.loginPosMenuOpen || root.avatarOrientMenuOpen || root.unlockAnimMenuOpen) {
             closeAllSettingsDrawers()
         } else if (root.userListOpen) {
             root.userListOpen = false
@@ -645,16 +648,33 @@ Rectangle {
         height: Math.max(40 * s, activeH * root.clockScale)
 
         x: root.getGridX(root.clockGridPos, width, 80 * s)
-        y: root.getGridY(root.clockGridPos, height, 60 * s, 100 * s)
+        y: {
+            var baseY = root.getGridY(root.clockGridPos, height, 60 * s, 100 * s)
+            if (root.isUnlocked) {
+                if (root.unlockAnimStyle === "Kinetic Slide") return baseY - 40 * s
+                if (root.unlockAnimStyle === "Directional Sweep") return -height - 60 * s
+            }
+            return baseY
+        }
+        scale: {
+            if (root.isUnlocked && root.unlockAnimStyle === "Morph Dissolve") return 0.85
+            return 1.0
+        }
         opacity: (!root.isUnlocked) ? root.uiOpacity : 0
         visible: opacity > 0
         z: 5
 
         Behavior on x { NumberAnimation { duration: 450; easing.type: Easing.OutCubic } }
-        Behavior on y { NumberAnimation { duration: 450; easing.type: Easing.OutCubic } }
+        Behavior on y {
+            NumberAnimation {
+                duration: root.isUnlocked ? (root.unlockAnimStyle === "Directional Sweep" ? 350 : 380) : 450
+                easing.type: root.isUnlocked ? (root.unlockAnimStyle === "Directional Sweep" ? Easing.InQuad : Easing.OutCubic) : Easing.OutCubic
+            }
+        }
+        Behavior on scale { NumberAnimation { duration: 320; easing.type: Easing.OutCubic } }
         Behavior on width { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
         Behavior on height { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
-        Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: root.isUnlocked ? 350 : 400; easing.type: Easing.OutCubic } }
 
         Timer {
             interval: 1000
@@ -999,7 +1019,21 @@ Rectangle {
     Item {
         id: loginPanelContainer
         x: root.getGridX(root.loginGridPos, width, 80 * s)
-        y: root.getGridY(root.loginGridPos, height, 60 * s, 100 * s) - (root.isKeyboardOpen ? 120 * s : 0)
+        y: {
+            var baseY = root.getGridY(root.loginGridPos, height, 60 * s, 100 * s) - (root.isKeyboardOpen ? 120 * s : 0)
+            if (!root.isUnlocked) {
+                if (root.unlockAnimStyle === "Kinetic Slide") return baseY + 45 * s
+                if (root.unlockAnimStyle === "Directional Sweep") return root.height + 60 * s
+            }
+            return baseY
+        }
+        scale: {
+            if (!root.isUnlocked) {
+                if (root.unlockAnimStyle === "Kinetic Slide") return 0.94
+                if (root.unlockAnimStyle === "Morph Dissolve") return 0.88
+            }
+            return 1.0
+        }
         width: Math.max(280 * s, loginContentInner.width * root.loginScale)
         height: Math.max(90 * s, loginContentInner.height * root.loginScale)
         opacity: root.isUnlocked ? root.uiOpacity : 0
@@ -1007,8 +1041,24 @@ Rectangle {
         z: 10
 
         Behavior on x { NumberAnimation { duration: 450; easing.type: Easing.OutCubic } }
-        Behavior on y { NumberAnimation { duration: 450; easing.type: Easing.OutCubic } }
-        Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
+        Behavior on y {
+            NumberAnimation {
+                duration: root.isUnlocked ? (root.unlockAnimStyle === "Directional Sweep" ? 520 : 460) : 350
+                easing.type: root.isUnlocked ? Easing.OutBack : Easing.OutCubic
+            }
+        }
+        Behavior on scale {
+            NumberAnimation {
+                duration: root.isUnlocked ? 460 : 300
+                easing.type: root.isUnlocked ? Easing.OutBack : Easing.OutCubic
+            }
+        }
+        Behavior on opacity {
+            NumberAnimation {
+                duration: root.isUnlocked ? 380 : 300
+                easing.type: Easing.OutCubic
+            }
+        }
 
         // Toggleable Frosted Glass Background Card (Unscaled 1:1 on Screen!)
         FrostedGlassCard {
@@ -3126,6 +3176,171 @@ property int currentTab: 0
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: root.loginCardEnabled = !root.loginCardEnabled
+                        }
+                    }
+
+                    // Row 1.6: Transition Style Selector
+                    Rectangle {
+                        id: rowUnlockAnim
+                        width: parent.width
+                        height: root.unlockAnimMenuOpen ? (48 * s + 90 * s) : 48 * s
+                        radius: 8 * s
+                        clip: true
+                        color: unlockAnimRowMa.containsMouse || root.unlockAnimMenuOpen ? Qt.alpha(root.accentColor, 0.20) : Qt.alpha(root.accentColor, 0.08)
+                        Behavior on height { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
+                        Behavior on color { ColorAnimation { duration: 200 } }
+
+                        Item {
+                            id: unlockAnimHeaderBar
+                            anchors.top: parent.top
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            height: 48 * s
+
+                            Column {
+                                anchors.left: parent.left
+                                anchors.leftMargin: 14 * s
+                                anchors.right: unlockAnimSplitBtn.left
+                                anchors.rightMargin: 8 * s
+                                anchors.verticalCenter: parent.verticalCenter
+                                spacing: 2 * s
+
+                                Text {
+                                    text: "Transition"
+                                    font.family: root.sansFont
+                                    font.pixelSize: 13 * s
+                                    font.weight: Font.Medium
+                                    color: root.textPrimary
+                                }
+                                Text {
+                                    text: "Lock to login animation style"
+                                    font.family: root.sansFont
+                                    font.pixelSize: 10 * s
+                                    color: root.textMuted
+                                }
+                            }
+
+                            Row {
+                                id: unlockAnimSplitBtn
+                                anchors.right: parent.right
+                                anchors.rightMargin: 14 * s
+                                anchors.verticalCenter: parent.verticalCenter
+                                spacing: 2 * s
+
+                                Rectangle {
+                                    height: 28 * s
+                                    width: unlockAnimLabel.implicitWidth + 18 * s
+                                    topLeftRadius: 14 * s
+                                    bottomLeftRadius: 14 * s
+                                    topRightRadius: 4 * s
+                                    bottomRightRadius: 4 * s
+                                    color: Qt.alpha(root.accentColor, 0.35)
+                                    border.color: Qt.alpha(root.accentColor, 0.55)
+                                    border.width: 1 * s
+
+                                    Text {
+                                        id: unlockAnimLabel
+                                        anchors.centerIn: parent
+                                        text: root.unlockAnimStyle
+                                        font.family: root.sansFont
+                                        font.pixelSize: 11 * s
+                                        font.weight: Font.Medium
+                                        color: "#ffffff"
+                                    }
+                                }
+
+                                Rectangle {
+                                    height: 28 * s
+                                    width: 26 * s
+                                    topLeftRadius: 4 * s
+                                    bottomLeftRadius: 4 * s
+                                    topRightRadius: 14 * s
+                                    bottomRightRadius: 14 * s
+                                    color: Qt.alpha(root.accentColor, 0.35)
+                                    border.color: Qt.alpha(root.accentColor, 0.55)
+                                    border.width: 1 * s
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "󰅀"
+                                        font.family: root.monoFont
+                                        font.pixelSize: 13 * s
+                                        color: "#ffffff"
+                                        rotation: root.unlockAnimMenuOpen ? 180 : 0
+                                        Behavior on rotation { NumberAnimation { duration: 180 } }
+                                    }
+                                }
+                            }
+
+                            MouseArea {
+                                id: unlockAnimRowMa
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    root.unlockAnimMenuOpen = !root.unlockAnimMenuOpen
+                                    root.boxMenuOpen = false
+                                    root.loginPosMenuOpen = false
+                                    root.avatarOrientMenuOpen = false
+                                }
+                            }
+                        }
+
+                        Item {
+                            id: unlockAnimDrawer
+                            anchors.top: unlockAnimHeaderBar.bottom
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.leftMargin: 8 * s
+                            anchors.rightMargin: 8 * s
+                            height: 84 * s
+                            visible: rowUnlockAnim.height > 52 * s
+                            clip: true
+
+                            ListView {
+                                anchors.fill: parent
+                                clip: true
+                                model: ["Kinetic Slide", "Morph Dissolve", "Directional Sweep"]
+                                spacing: 2 * s
+
+                                delegate: Rectangle {
+                                    width: ListView.view ? ListView.view.width : 0
+                                    height: 26 * s
+                                    radius: 6 * s
+                                    color: animDelMa.containsMouse ? Qt.alpha(root.accentColor, 0.30) : (root.unlockAnimStyle === modelData ? Qt.alpha(root.accentColor, 0.18) : "transparent")
+
+                                    Text {
+                                        anchors.left: parent.left
+                                        anchors.leftMargin: 10 * s
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        text: modelData
+                                        font.family: root.sansFont
+                                        font.pixelSize: 11 * s
+                                        color: root.unlockAnimStyle === modelData ? "#ffffff" : root.textSecondary
+                                    }
+
+                                    Text {
+                                        anchors.right: parent.right
+                                        anchors.rightMargin: 10 * s
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        text: "󰄬"
+                                        font.family: root.monoFont
+                                        font.pixelSize: 12 * s
+                                        color: root.accentColor
+                                        visible: root.unlockAnimStyle === modelData
+                                    }
+
+                                    MouseArea {
+                                        id: animDelMa
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            root.unlockAnimStyle = modelData
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
