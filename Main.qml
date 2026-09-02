@@ -136,6 +136,7 @@ Rectangle {
     // ──────────────────────────────────────────
     property int loginGridPos: 5 // Default: 5 (Middle Right)
     property real loginScale: 1.0 // 0.7 to 1.6
+    property real avatarScale: 1.0 // 0.6 to 1.4
     property bool loginCardEnabled: false
     property real loginCardOpacity: 0.40 // 0.15 to 0.85
     property string avatarOrientation: "Right" // "Right", "Left", "Top Center", "Top Left", "Top Right"
@@ -945,11 +946,28 @@ Rectangle {
                 id: loginContentInner
                 readonly property real pwBoxW: 280 * s
                 readonly property real pwBoxH: 52 * s
-                readonly property real avatarSize: 80 * s
+                readonly property real avatarSize: Math.round(80 * s * root.avatarScale)
                 readonly property bool isTop: root.avatarOrientation === "Top Center" || root.avatarOrientation === "Top Left" || root.avatarOrientation === "Top Right"
 
-                width: (root.avatarOrientation === "Right" || root.avatarOrientation === "Left") ? (pwBoxW + 20 * s + avatarSize) : pwBoxW
-                height: isTop ? (avatarSize + 14 * s + pwBoxH + 28 * s) : Math.max(avatarSize, 30 * s + pwBoxH + 26 * s)
+                width: {
+                    if (root.avatarOrientation === "Right" || root.avatarOrientation === "Left") {
+                        return pwBoxW + 20 * s + avatarSize
+                    }
+                    if (root.avatarOrientation === "Top Left") {
+                        return Math.max(pwBoxW, avatarSize + 14 * s + userDisplayNameRow.width)
+                    }
+                    return Math.max(pwBoxW, avatarSize)
+                }
+
+                height: {
+                    if (root.avatarOrientation === "Top Center") {
+                        return avatarSize + 12 * s + userDisplayNameRow.height + 12 * s + pwBoxH
+                    }
+                    if (root.avatarOrientation === "Top Left" || root.avatarOrientation === "Top Right") {
+                        return avatarSize + 14 * s + pwBoxH
+                    }
+                    return Math.max(avatarSize, userDisplayNameRow.height + 10 * s + pwBoxH)
+                }
 
                 // Username display with Accent Dot
                 Row {
@@ -958,15 +976,16 @@ Rectangle {
                     x: {
                         if (root.avatarOrientation === "Top Center") return (loginContentInner.pwBoxW - width) / 2
                         if (root.avatarOrientation === "Top Left") return loginContentInner.avatarSize + 14 * s
-                        if (root.avatarOrientation === "Top Right") return Math.max(0, loginContentInner.pwBoxW - loginContentInner.avatarSize - 14 * s - width)
+                        if (root.avatarOrientation === "Top Right") return 0
                         if (root.avatarOrientation === "Left") return loginContentInner.avatarSize + 20 * s
                         return 0
                     }
                     y: {
+                        if (root.avatarOrientation === "Top Center") return loginContentInner.avatarSize + 12 * s
                         if (root.avatarOrientation === "Top Left" || root.avatarOrientation === "Top Right") {
                             return (loginContentInner.avatarSize - height) / 2
                         }
-                        return Math.max(0, passwordBoxRect.y - height - 6 * s)
+                        return 0
                     }
 
                     Behavior on x { NumberAnimation { duration: 350; easing.type: Easing.OutCubic } }
@@ -1000,8 +1019,13 @@ Rectangle {
                         return 0
                     }
                     y: {
-                        if (loginContentInner.isTop) return loginContentInner.avatarSize + 14 * s
-                        return 28 * s
+                        if (root.avatarOrientation === "Top Center") {
+                            return userDisplayNameRow.y + userDisplayNameRow.height + 12 * s
+                        }
+                        if (root.avatarOrientation === "Top Left" || root.avatarOrientation === "Top Right") {
+                            return loginContentInner.avatarSize + 14 * s
+                        }
+                        return userDisplayNameRow.height + 10 * s
                     }
                     width: loginContentInner.pwBoxW
                     height: loginContentInner.pwBoxH
@@ -3193,10 +3217,7 @@ property int currentTab: 0
                     Rectangle {
                         width: parent.width
                         height: 70 * s
-                        topLeftRadius: 4 * s
-                        topRightRadius: 4 * s
-                        bottomLeftRadius: 14 * s
-                        bottomRightRadius: 14 * s
+                        radius: 12 * s
                         color: Qt.alpha(root.accentColor, 0.08)
 
                         Row {
@@ -3275,6 +3296,90 @@ property int currentTab: 0
                                     font.family: root.sansFont
                                     font.pixelSize: 10 * s
                                     color: root.textMuted
+                                }
+                            }
+                        }
+                    }
+
+                    // Row 2.3: Avatar Size Slider
+                    Rectangle {
+                        id: rowAvatarScale
+                        width: parent.width
+                        height: 58 * s
+                        radius: 12 * s
+                        color: Qt.alpha(root.accentColor, 0.08)
+
+                        Column {
+                            anchors.fill: parent
+                            anchors.margins: 10 * s
+                            spacing: 8 * s
+
+                            Item {
+                                width: parent.width
+                                height: 16 * s
+
+                                Text {
+                                    text: "Avatar size"
+                                    font.family: root.sansFont
+                                    font.pixelSize: 12 * s
+                                    font.weight: Font.DemiBold
+                                    color: root.textPrimary
+                                    anchors.left: parent.left
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+
+                                Text {
+                                    text: root.avatarScale.toFixed(1) + "x"
+                                    font.family: root.monoFont
+                                    font.pixelSize: 11 * s
+                                    color: root.accentColor
+                                    anchors.right: parent.right
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                            }
+
+                            Item {
+                                width: parent.width
+                                height: 12 * s
+
+                                Rectangle {
+                                    id: avatarScaleTrack
+                                    anchors.fill: parent
+                                    height: 4 * s
+                                    radius: 2 * s
+                                    color: Qt.rgba(1, 1, 1, 0.12)
+                                    anchors.verticalCenter: parent.verticalCenter
+
+                                    Rectangle {
+                                        height: parent.height
+                                        width: Math.max(0, Math.min(parent.width, ((root.avatarScale - 0.6) / 0.8) * parent.width))
+                                        radius: 2 * s
+                                        color: root.accentColor
+                                    }
+                                }
+
+                                Rectangle {
+                                    width: 12 * s
+                                    height: 12 * s
+                                    radius: 6 * s
+                                    color: "#ffffff"
+                                    anchors.verticalCenter: avatarScaleTrack.verticalCenter
+                                    x: Math.max(0, Math.min(avatarScaleTrack.width - width, ((root.avatarScale - 0.6) / 0.8) * (avatarScaleTrack.width - width)))
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onPressed: function(mouse) {
+                                        var r = Math.max(0, Math.min(1, mouse.x / width))
+                                        root.avatarScale = Math.round((0.6 + r * 0.8) * 10) / 10
+                                    }
+                                    onPositionChanged: function(mouse) {
+                                        if (pressed) {
+                                            var r = Math.max(0, Math.min(1, mouse.x / width))
+                                            root.avatarScale = Math.round((0.6 + r * 0.8) * 10) / 10
+                                        }
+                                    }
                                 }
                             }
                         }
