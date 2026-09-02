@@ -1518,29 +1518,32 @@ Rectangle {
         }
 
         // ─── Settings Morphing Container (Dynamically Themed Glass!) ───
+        // ─── Settings Morphing Container (Caelestia Glass Settings Hub!) ───
         Rectangle {
             id: morphingSettingsContainer
             anchors.left: parent.left
             anchors.bottom: parent.bottom
-            width: root.settingsOpen ? 350 * s : 38 * s
-            height: root.settingsOpen ? (296 * s + (root.shapeMenuOpen ? 130 * s : (root.paletteMenuOpen ? 110 * s : (root.boxMenuOpen ? 80 * s : 0)))) : 38 * s
-            radius: root.settingsOpen ? 20 * s : 12 * s
+            width: root.settingsOpen ? 480 * s : 38 * s
+            height: root.settingsOpen ? 520 * s : 38 * s
+            radius: root.settingsOpen ? 22 * s : 12 * s
             color: root.settingsOpen ? root.glassBg : (settingsBtnMa.containsMouse ? Qt.alpha(root.accentColor, 0.28) : root.glassBg)
             border.color: root.settingsOpen ? root.glassBorder : (settingsBtnMa.containsMouse ? root.accentColor : root.glassBorder)
             border.width: 1 * s
             clip: true
             z: 50
 
-            layer.enabled: true
-            layer.effect: DropShadow { color: "#50000000"; radius: 20; samples: 16 }
+            property int currentTab: 0
 
-            Behavior on width { NumberAnimation { duration: 420; easing.type: Easing.OutCubic } }
-            Behavior on height { NumberAnimation { duration: 420; easing.type: Easing.OutCubic } }
-            Behavior on radius { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+            layer.enabled: true
+            layer.effect: DropShadow { color: "#50000000"; radius: root.settingsOpen ? 24 : 16; samples: 20 }
+
+            Behavior on width { NumberAnimation { duration: 380; easing.type: Easing.OutCubic } }
+            Behavior on height { NumberAnimation { duration: 380; easing.type: Easing.OutCubic } }
+            Behavior on radius { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
             Behavior on color { ColorAnimation { duration: 250 } }
             Behavior on border.color { ColorAnimation { duration: 250 } }
 
-            // Collapsed View: Gear Icon
+            // Collapsed View: Gear Icon Button
             Item {
                 anchors.fill: parent
                 visible: !root.settingsOpen
@@ -1571,41 +1574,53 @@ Rectangle {
                 }
             }
 
-            // Expanded View: Tailored M3 Settings
-            Column {
-                id: settingsCol
-                anchors.top: parent.top
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.margins: 14 * s
-                spacing: 2 * s
+            // Expanded View: Tabbed Personalization Hub
+            Item {
+                anchors.fill: parent
+                anchors.margins: 16 * s
                 visible: root.settingsOpen
                 opacity: root.settingsOpen ? 1 : 0
                 Behavior on opacity { NumberAnimation { duration: 250 } }
 
-                // Top Header Row
+                // Header Bar
                 Item {
-                    width: parent.width
-                    height: 24 * s
+                    id: settingsHeader
+                    anchors.top: parent.top
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    height: 28 * s
 
-                    Text {
-                        text: "Appearance & Display"
-                        font.family: root.sansFont
-                        font.pixelSize: 11 * s
-                        font.weight: Font.DemiBold
-                        color: root.textSecondary
+                    Row {
                         anchors.left: parent.left
-                        anchors.leftMargin: 4 * s
                         anchors.verticalCenter: parent.verticalCenter
+                        spacing: 8 * s
+
+                        Rectangle {
+                            width: 8 * s
+                            height: 8 * s
+                            radius: 4 * s
+                            color: root.accentColor
+                            anchors.verticalCenter: parent.verticalCenter
+                            Behavior on color { ColorAnimation { duration: 250 } }
+                        }
+
+                        Text {
+                            text: "Caelestia Glass Settings"
+                            font.family: root.sansFont
+                            font.pixelSize: 14 * s
+                            font.weight: Font.Bold
+                            color: root.textPrimary
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
                     }
 
                     Rectangle {
-                        width: 24 * s
-                        height: 24 * s
-                        radius: 12 * s
+                        width: 26 * s
+                        height: 26 * s
+                        radius: 13 * s
                         anchors.right: parent.right
                         anchors.verticalCenter: parent.verticalCenter
-                        color: closeSetMa.containsMouse ? Qt.alpha(root.accentColor, 0.25) : "transparent"
+                        color: closeSetMa.containsMouse ? Qt.alpha(root.accentColor, 0.25) : Qt.rgba(1, 1, 1, 0.06)
 
                         Text {
                             anchors.centerIn: parent
@@ -1620,676 +1635,1118 @@ Rectangle {
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                root.settingsOpen = false
-                                root.shapeMenuOpen = false
-                                root.paletteMenuOpen = false
-                                root.boxMenuOpen = false
-                            }
+                            onClicked: root.settingsOpen = false
                         }
                     }
                 }
 
-                // ── Row 1: Avatar Shape (Scrollable Dropdown Drawer) ──
-                Rectangle {
-                    id: rowShape
-                    width: parent.width
-                    height: root.shapeMenuOpen ? (48 * s + shapeDrawer.height) : 48 * s
-                    topLeftRadius: 14 * s
-                    topRightRadius: 14 * s
-                    bottomLeftRadius: 4 * s
-                    bottomRightRadius: 4 * s
-                    clip: true
-                    color: shapeRowMa.containsMouse || root.shapeMenuOpen ? Qt.alpha(root.accentColor, 0.20) : Qt.alpha(root.accentColor, 0.08)
-                    Behavior on height { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
-                    Behavior on color { ColorAnimation { duration: 200 } }
+                // Tab Bar
+                Row {
+                    id: settingsTabBar
+                    anchors.top: settingsHeader.bottom
+                    anchors.topMargin: 12 * s
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    height: 32 * s
+                    spacing: 6 * s
 
-                    Item {
-                        id: shapeHeaderBar
-                        anchors.top: parent.top
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        height: 48 * s
+                    Repeater {
+                        model: ["Clock", "Login", "Avatar", "Palette"]
+                        delegate: Rectangle {
+                            width: (settingsTabBar.width - (3 * 6 * s)) / 4
+                            height: parent.height
+                            radius: 8 * s
+                            color: morphingSettingsContainer.currentTab === index ? Qt.alpha(root.accentColor, 0.35) : (tabBtnMa.containsMouse ? Qt.alpha(root.accentColor, 0.15) : Qt.rgba(1, 1, 1, 0.05))
+                            border.color: morphingSettingsContainer.currentTab === index ? root.accentColor : Qt.rgba(1, 1, 1, 0.10)
+                            border.width: 1 * s
 
-                        Column {
-                            anchors.left: parent.left
-                            anchors.leftMargin: 14 * s
-                            anchors.right: shapeSplitBtn.left
-                            anchors.rightMargin: 8 * s
-                            anchors.verticalCenter: parent.verticalCenter
-                            spacing: 2 * s
-
-                            Text {
-                                text: "Avatar shape"
-                                font.family: root.sansFont
-                                font.pixelSize: 13 * s
-                                font.weight: Font.Medium
-                                color: root.textPrimary
-                            }
-                            Text {
-                                text: "Profile picture mask geometry"
-                                font.family: root.sansFont
-                                font.pixelSize: 10 * s
-                                color: root.textMuted
-                            }
-                        }
-
-                        Row {
-                            id: shapeSplitBtn
-                            anchors.right: parent.right
-                            anchors.rightMargin: 14 * s
-                            anchors.verticalCenter: parent.verticalCenter
-                            spacing: 2 * s
-
-                            Rectangle {
-                                height: 28 * s
-                                width: shapeBtnLabel.implicitWidth + 18 * s
-                                topLeftRadius: 14 * s
-                                bottomLeftRadius: 14 * s
-                                topRightRadius: 4 * s
-                                bottomRightRadius: 4 * s
-                                color: Qt.alpha(root.accentColor, 0.35)
-                                border.color: Qt.alpha(root.accentColor, 0.55)
-                                border.width: 1 * s
-                                Behavior on color { ColorAnimation { duration: 200 } }
-                                Behavior on border.color { ColorAnimation { duration: 200 } }
-
-                                Text {
-                                    id: shapeBtnLabel
-                                    anchors.centerIn: parent
-                                    text: root.avatarShape
-                                    font.family: root.sansFont
-                                    font.pixelSize: 11 * s
-                                    font.weight: Font.Medium
-                                    color: "#ffffff"
-                                }
-                            }
-
-                            Rectangle {
-                                height: 28 * s
-                                width: 26 * s
-                                topLeftRadius: 4 * s
-                                bottomLeftRadius: 4 * s
-                                topRightRadius: 14 * s
-                                bottomRightRadius: 14 * s
-                                color: Qt.alpha(root.accentColor, 0.35)
-                                border.color: Qt.alpha(root.accentColor, 0.55)
-                                border.width: 1 * s
-                                Behavior on color { ColorAnimation { duration: 200 } }
-                                Behavior on border.color { ColorAnimation { duration: 200 } }
-
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: "󰅀"
-                                    font.family: root.monoFont
-                                    font.pixelSize: 13 * s
-                                    color: "#ffffff"
-                                    rotation: root.shapeMenuOpen ? 180 : 0
-                                    Behavior on rotation { NumberAnimation { duration: 180 } }
-                                }
-                            }
-                        }
-
-                        MouseArea {
-                            id: shapeRowMa
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                root.shapeMenuOpen = !root.shapeMenuOpen
-                                root.paletteMenuOpen = false
-                                root.boxMenuOpen = false
-                            }
-                        }
-                    }
-
-                    Item {
-                        id: shapeDrawer
-                        anchors.top: shapeHeaderBar.bottom
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.leftMargin: 8 * s
-                        anchors.rightMargin: 8 * s
-                        height: root.shapeMenuOpen ? 130 * s : 0
-                        visible: root.shapeMenuOpen
-
-                        ListView {
-                            anchors.fill: parent
-                            clip: true
-                            model: [
-                                { name: "Triangle",        shape: MaterialShape.Triangle },
-                                { name: "Cookie 9-Sided", shape: MaterialShape.Cookie9Sided },
-                                { name: "Clamshell",      shape: MaterialShape.ClamShell },
-                                { name: "Cookie 4-Sided", shape: MaterialShape.Cookie4Sided },
-                                { name: "Cookie 7-Sided", shape: MaterialShape.Cookie7Sided },
-                                { name: "Sunny",          shape: MaterialShape.Sunny },
-                                { name: "Very Sunny",     shape: MaterialShape.VerySunny },
-                                { name: "Square",         shape: MaterialShape.Square },
-                                { name: "Circle",         shape: MaterialShape.Circle },
-                                { name: "Diamond",        shape: MaterialShape.Diamond },
-                                { name: "Heart",          shape: MaterialShape.Heart }
-                            ]
-                            spacing: 2 * s
-
-                            delegate: Rectangle {
-                                width: ListView.view ? ListView.view.width : 0
-                                height: 26 * s
-                                radius: 6 * s
-                                color: shapeDelMa.containsMouse ? Qt.alpha(root.accentColor, 0.30) : (root.avatarShape === modelData.name ? Qt.alpha(root.accentColor, 0.18) : "transparent")
-
-                                Text {
-                                    anchors.left: parent.left
-                                    anchors.leftMargin: 10 * s
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    text: modelData.name
-                                    font.family: root.sansFont
-                                    font.pixelSize: 11 * s
-                                    color: root.avatarShape === modelData.name ? "#ffffff" : root.textSecondary
-                                }
-
-                                Text {
-                                    anchors.right: parent.right
-                                    anchors.rightMargin: 10 * s
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    text: "󰄬"
-                                    font.family: root.monoFont
-                                    font.pixelSize: 12 * s
-                                    color: root.accentColor
-                                    visible: root.avatarShape === modelData.name
-                                }
-
-                                MouseArea {
-                                    id: shapeDelMa
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: {
-                                        root.avatarShape = modelData.name
-                                        root.currentM3Shape = modelData.shape
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // ── Row 2: 12-Hour Clock ──
-                Rectangle {
-                    width: parent.width
-                    height: 48 * s
-                    radius: 4 * s
-                    color: clockRowMa.containsMouse ? Qt.alpha(root.accentColor, 0.20) : Qt.alpha(root.accentColor, 0.08)
-                    Behavior on color { ColorAnimation { duration: 200 } }
-
-                    Column {
-                        anchors.left: parent.left
-                        anchors.leftMargin: 14 * s
-                        anchors.right: switch12h.left
-                        anchors.rightMargin: 8 * s
-                        anchors.verticalCenter: parent.verticalCenter
-                        spacing: 2 * s
-
-                        Text {
-                            text: "12-hour clock"
-                            font.family: root.sansFont
-                            font.pixelSize: 13 * s
-                            font.weight: Font.Medium
-                            color: root.textPrimary
-                        }
-                        Text {
-                            text: "Use AM/PM format instead of 24h"
-                            font.family: root.sansFont
-                            font.pixelSize: 10 * s
-                            color: root.textMuted
-                        }
-                    }
-
-                    Rectangle {
-                        id: switch12h
-                        anchors.right: parent.right
-                        anchors.rightMargin: 14 * s
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: 42 * s
-                        height: 24 * s
-                        radius: 12 * s
-                        color: root.is12Hour ? root.accentColor : Qt.rgba(1, 1, 1, 0.15)
-                        Behavior on color { ColorAnimation { duration: 200 } }
-
-                        Rectangle {
-                            id: thumb12h
-                            width: 18 * s
-                            height: 18 * s
-                            radius: 9 * s
-                            anchors.verticalCenter: parent.verticalCenter
-                            x: root.is12Hour ? parent.width - width - 3 * s : 3 * s
-                            color: "#ffffff"
-                            Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                            Behavior on color { ColorAnimation { duration: 180 } }
+                            Behavior on border.color { ColorAnimation { duration: 180 } }
 
                             Text {
                                 anchors.centerIn: parent
-                                text: root.is12Hour ? "󰄬" : "󰅖"
-                                font.family: root.monoFont
-                                font.pixelSize: 10 * s
-                                color: root.is12Hour ? root.accentColor : root.textMuted
+                                text: modelData
+                                font.family: root.sansFont
+                                font.pixelSize: 11 * s
+                                font.weight: morphingSettingsContainer.currentTab === index ? Font.Bold : Font.Medium
+                                color: morphingSettingsContainer.currentTab === index ? "#ffffff" : root.textSecondary
                             }
-                        }
-                    }
 
-                    MouseArea {
-                        id: clockRowMa
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            root.is12Hour = !root.is12Hour
+                            MouseArea {
+                                id: tabBtnMa
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: morphingSettingsContainer.currentTab = index
+                            }
                         }
                     }
                 }
 
-                // ── Row 3: Color Palette (Click to live-morph every glass background!) ──
-                Rectangle {
-                    width: parent.width
-                    height: root.paletteMenuOpen ? (48 * s + palDrawer.height) : 48 * s
-                    radius: 4 * s
+                // Tab Content Scroll Area
+                Flickable {
+                    id: settingsFlickable
+                    anchors.top: settingsTabBar.bottom
+                    anchors.topMargin: 12 * s
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.bottom: parent.bottom
+                    contentWidth: width
+                    contentHeight: tabContentCol.implicitHeight + 20 * s
                     clip: true
-                    color: palRowMa.containsMouse || root.paletteMenuOpen ? Qt.alpha(root.accentColor, 0.20) : Qt.alpha(root.accentColor, 0.08)
-                    Behavior on height { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
-                    Behavior on color { ColorAnimation { duration: 200 } }
-
-                    Item {
-                        id: palHeaderBar
-                        anchors.top: parent.top
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        height: 48 * s
-
-                        Column {
-                            anchors.left: parent.left
-                            anchors.leftMargin: 14 * s
-                            anchors.right: palSplitBtn.left
-                            anchors.rightMargin: 8 * s
-                            anchors.verticalCenter: parent.verticalCenter
-                            spacing: 2 * s
-
-                            Text {
-                                text: "Color palette"
-                                font.family: root.sansFont
-                                font.pixelSize: 13 * s
-                                font.weight: Font.Medium
-                                color: root.textPrimary
-                            }
-                            Text {
-                                text: "Select theme accent and glass tint"
-                                font.family: root.sansFont
-                                font.pixelSize: 10 * s
-                                color: root.textMuted
-                            }
-                        }
-
-                        Row {
-                            id: palSplitBtn
-                            anchors.right: parent.right
-                            anchors.rightMargin: 14 * s
-                            anchors.verticalCenter: parent.verticalCenter
-                            spacing: 2 * s
-
-                            Rectangle {
-                                height: 28 * s
-                                width: palBtnLabel.implicitWidth + 18 * s
-                                topLeftRadius: 14 * s
-                                bottomLeftRadius: 14 * s
-                                topRightRadius: 4 * s
-                                bottomRightRadius: 4 * s
-                                color: Qt.alpha(root.accentColor, 0.35)
-                                border.color: Qt.alpha(root.accentColor, 0.55)
-                                border.width: 1 * s
-                                Behavior on color { ColorAnimation { duration: 200 } }
-                                Behavior on border.color { ColorAnimation { duration: 200 } }
-
-                                Text {
-                                    id: palBtnLabel
-                                    anchors.centerIn: parent
-                                    text: root.colorScheme
-                                    font.family: root.sansFont
-                                    font.pixelSize: 11 * s
-                                    font.weight: Font.Medium
-                                    color: "#ffffff"
-                                }
-                            }
-
-                            Rectangle {
-                                height: 28 * s
-                                width: 26 * s
-                                topLeftRadius: 4 * s
-                                bottomLeftRadius: 4 * s
-                                topRightRadius: 14 * s
-                                bottomRightRadius: 14 * s
-                                color: Qt.alpha(root.accentColor, 0.35)
-                                border.color: Qt.alpha(root.accentColor, 0.55)
-                                border.width: 1 * s
-                                Behavior on color { ColorAnimation { duration: 200 } }
-                                Behavior on border.color { ColorAnimation { duration: 200 } }
-
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: "󰅀"
-                                    font.family: root.monoFont
-                                    font.pixelSize: 13 * s
-                                    color: "#ffffff"
-                                    rotation: root.paletteMenuOpen ? 180 : 0
-                                    Behavior on rotation { NumberAnimation { duration: 180 } }
-                                }
-                            }
-                        }
-
-                        MouseArea {
-                            id: palRowMa
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                root.paletteMenuOpen = !root.paletteMenuOpen
-                                root.shapeMenuOpen = false
-                                root.boxMenuOpen = false
-                            }
-                        }
-                    }
-
-                    Item {
-                        id: palDrawer
-                        anchors.top: palHeaderBar.bottom
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.leftMargin: 8 * s
-                        anchors.rightMargin: 8 * s
-                        height: root.paletteMenuOpen ? 110 * s : 0
-                        visible: root.paletteMenuOpen
-
-                        ListView {
-                            anchors.fill: parent
-                            clip: true
-                            model: ["Nothing Red", "Catppuccin Mocha", "Nord", "Tokyo Night", "Rose Pine", "Dracula"]
-                            spacing: 2 * s
-
-                            delegate: Rectangle {
-                                width: ListView.view ? ListView.view.width : 0
-                                height: 26 * s
-                                radius: 6 * s
-                                color: palDelMa.containsMouse ? Qt.alpha(root.accentColor, 0.30) : (root.colorScheme === modelData ? Qt.alpha(root.accentColor, 0.18) : "transparent")
-
-                                Text {
-                                    anchors.left: parent.left
-                                    anchors.leftMargin: 10 * s
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    text: modelData
-                                    font.family: root.sansFont
-                                    font.pixelSize: 11 * s
-                                    color: root.colorScheme === modelData ? "#ffffff" : root.textSecondary
-                                }
-
-                                Text {
-                                    anchors.right: parent.right
-                                    anchors.rightMargin: 10 * s
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    text: "󰄬"
-                                    font.family: root.monoFont
-                                    font.pixelSize: 12 * s
-                                    color: root.accentColor
-                                    visible: root.colorScheme === modelData
-                                }
-
-                                MouseArea {
-                                    id: palDelMa
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: {
-                                        root.colorScheme = modelData
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // ── Row 4: Input Box Shape ──
-                Rectangle {
-                    id: rowBox
-                    width: parent.width
-                    height: root.boxMenuOpen ? (48 * s + boxDrawer.height) : 48 * s
-                    radius: 4 * s
-                    clip: true
-                    color: boxRowMa.containsMouse || root.boxMenuOpen ? Qt.alpha(root.accentColor, 0.20) : Qt.alpha(root.accentColor, 0.08)
-                    Behavior on height { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
-                    Behavior on color { ColorAnimation { duration: 200 } }
-
-                    Item {
-                        id: boxHeaderBar
-                        anchors.top: parent.top
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        height: 48 * s
-
-                        Column {
-                            anchors.left: parent.left
-                            anchors.leftMargin: 14 * s
-                            anchors.right: boxSplitBtn.left
-                            anchors.rightMargin: 8 * s
-                            anchors.verticalCenter: parent.verticalCenter
-                            spacing: 2 * s
-
-                            Text {
-                                text: "Input box shape"
-                                font.family: root.sansFont
-                                font.pixelSize: 13 * s
-                                font.weight: Font.Medium
-                                color: root.textPrimary
-                            }
-                            Text {
-                                text: "Password box corner style"
-                                font.family: root.sansFont
-                                font.pixelSize: 10 * s
-                                color: root.textMuted
-                            }
-                        }
-
-                        Row {
-                            id: boxSplitBtn
-                            anchors.right: parent.right
-                            anchors.rightMargin: 14 * s
-                            anchors.verticalCenter: parent.verticalCenter
-                            spacing: 2 * s
-
-                            Rectangle {
-                                height: 28 * s
-                                width: boxBtnLabel.implicitWidth + 18 * s
-                                topLeftRadius: 14 * s
-                                bottomLeftRadius: 14 * s
-                                topRightRadius: 4 * s
-                                bottomRightRadius: 4 * s
-                                color: Qt.alpha(root.accentColor, 0.35)
-                                border.color: Qt.alpha(root.accentColor, 0.55)
-                                border.width: 1 * s
-                                Behavior on color { ColorAnimation { duration: 200 } }
-                                Behavior on border.color { ColorAnimation { duration: 200 } }
-
-                                Text {
-                                    id: boxBtnLabel
-                                    anchors.centerIn: parent
-                                    text: root.boxShape
-                                    font.family: root.sansFont
-                                    font.pixelSize: 11 * s
-                                    font.weight: Font.Medium
-                                    color: "#ffffff"
-                                }
-                            }
-
-                            Rectangle {
-                                height: 28 * s
-                                width: 26 * s
-                                topLeftRadius: 4 * s
-                                bottomLeftRadius: 4 * s
-                                topRightRadius: 14 * s
-                                bottomRightRadius: 14 * s
-                                color: Qt.alpha(root.accentColor, 0.35)
-                                border.color: Qt.alpha(root.accentColor, 0.55)
-                                border.width: 1 * s
-                                Behavior on color { ColorAnimation { duration: 200 } }
-                                Behavior on border.color { ColorAnimation { duration: 200 } }
-
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: "󰅀"
-                                    font.family: root.monoFont
-                                    font.pixelSize: 13 * s
-                                    color: "#ffffff"
-                                    rotation: root.boxMenuOpen ? 180 : 0
-                                    Behavior on rotation { NumberAnimation { duration: 180 } }
-                                }
-                            }
-                        }
-
-                        MouseArea {
-                            id: boxRowMa
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                root.boxMenuOpen = !root.boxMenuOpen
-                                root.shapeMenuOpen = false
-                                root.paletteMenuOpen = false
-                            }
-                        }
-                    }
-
-                    Item {
-                        id: boxDrawer
-                        anchors.top: boxHeaderBar.bottom
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.leftMargin: 8 * s
-                        anchors.rightMargin: 8 * s
-                        height: root.boxMenuOpen ? 80 * s : 0
-                        visible: root.boxMenuOpen
-
-                        ListView {
-                            anchors.fill: parent
-                            clip: true
-                            model: ["Rounded", "Pill", "Sharp"]
-                            spacing: 2 * s
-
-                            delegate: Rectangle {
-                                width: ListView.view ? ListView.view.width : 0
-                                height: 26 * s
-                                radius: 6 * s
-                                color: boxDelMa.containsMouse ? Qt.alpha(root.accentColor, 0.30) : (root.boxShape === modelData ? Qt.alpha(root.accentColor, 0.18) : "transparent")
-
-                                Text {
-                                    anchors.left: parent.left
-                                    anchors.leftMargin: 10 * s
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    text: modelData
-                                    font.family: root.sansFont
-                                    font.pixelSize: 11 * s
-                                    color: root.boxShape === modelData ? "#ffffff" : root.textSecondary
-                                }
-
-                                Text {
-                                    anchors.right: parent.right
-                                    anchors.rightMargin: 10 * s
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    text: "󰄬"
-                                    font.family: root.monoFont
-                                    font.pixelSize: 12 * s
-                                    color: root.accentColor
-                                    visible: root.boxShape === modelData
-                                }
-
-                                MouseArea {
-                                    id: boxDelMa
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: {
-                                        root.boxShape = modelData
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // ── Row 5: Lava Lamp Animation ──
-                Rectangle {
-                    width: parent.width
-                    height: 48 * s
-                    topLeftRadius: 4 * s
-                    topRightRadius: 4 * s
-                    bottomLeftRadius: 14 * s
-                    bottomRightRadius: 14 * s
-                    color: blobRowMa.containsMouse ? Qt.alpha(root.accentColor, 0.20) : Qt.alpha(root.accentColor, 0.08)
-                    Behavior on color { ColorAnimation { duration: 200 } }
+                    boundsBehavior: Flickable.StopAtBounds
 
                     Column {
-                        anchors.left: parent.left
-                        anchors.leftMargin: 14 * s
-                        anchors.right: switchBlobs.left
-                        anchors.rightMargin: 8 * s
-                        anchors.verticalCenter: parent.verticalCenter
-                        spacing: 2 * s
+                        id: tabContentCol
+                        width: parent.width
+                        spacing: 12 * s
 
-                        Text {
-                            text: "Lava lamp background"
-                            font.family: root.sansFont
-                            font.pixelSize: 13 * s
-                            font.weight: Font.Medium
-                            color: root.textPrimary
-                        }
-                        Text {
-                            text: "Animate blobs on idle screen"
-                            font.family: root.sansFont
-                            font.pixelSize: 10 * s
-                            color: root.textMuted
-                        }
-                    }
+                        // ══════════════════════════════════════════
+                        // TAB 0: CLOCK SETTINGS
+                        // ══════════════════════════════════════════
+                        Column {
+                            width: parent.width
+                            spacing: 10 * s
+                            visible: morphingSettingsContainer.currentTab === 0
 
-                    Rectangle {
-                        id: switchBlobs
-                        anchors.right: parent.right
-                        anchors.rightMargin: 14 * s
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: 42 * s
-                        height: 24 * s
-                        radius: 12 * s
-                        color: root.showLavaBlobs ? root.accentColor : Qt.rgba(1, 1, 1, 0.15)
-                        Behavior on color { ColorAnimation { duration: 200 } }
-
-                        Rectangle {
-                            id: thumbBlobs
-                            width: 18 * s
-                            height: 18 * s
-                            radius: 9 * s
-                            anchors.verticalCenter: parent.verticalCenter
-                            x: root.showLavaBlobs ? parent.width - width - 3 * s : 3 * s
-                            color: "#ffffff"
-                            Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-
+                            // 1. Clock Style Selector
                             Text {
-                                anchors.centerIn: parent
-                                text: root.showLavaBlobs ? "󰄬" : "󰅖"
-                                font.family: root.monoFont
-                                font.pixelSize: 10 * s
-                                color: root.showLavaBlobs ? root.accentColor : root.textMuted
+                                text: "Clock Style"
+                                font.family: root.sansFont
+                                font.pixelSize: 12 * s
+                                font.weight: Font.DemiBold
+                                color: root.textSecondary
+                            }
+
+                            Grid {
+                                columns: 2
+                                spacing: 6 * s
+                                width: parent.width
+
+                                Repeater {
+                                    model: ["Caelestia Split", "Classic Minimal", "Two-Tier Stacked", "Compact Capsule"]
+                                    delegate: Rectangle {
+                                        width: (tabContentCol.width - 6 * s) / 2
+                                        height: 32 * s
+                                        radius: 8 * s
+                                        color: root.clockStyle === modelData ? Qt.alpha(root.accentColor, 0.35) : (cStyleMa.containsMouse ? Qt.alpha(root.accentColor, 0.15) : Qt.rgba(1, 1, 1, 0.06))
+                                        border.color: root.clockStyle === modelData ? root.accentColor : Qt.rgba(1, 1, 1, 0.10)
+                                        border.width: 1 * s
+
+                                        Behavior on color { ColorAnimation { duration: 150 } }
+
+                                        Row {
+                                            anchors.centerIn: parent
+                                            spacing: 6 * s
+
+                                            Text {
+                                                text: modelData
+                                                font.family: root.sansFont
+                                                font.pixelSize: 11 * s
+                                                font.weight: root.clockStyle === modelData ? Font.Bold : Font.Normal
+                                                color: root.clockStyle === modelData ? "#ffffff" : root.textPrimary
+                                            }
+
+                                            Text {
+                                                text: "󰄬"
+                                                font.family: root.monoFont
+                                                font.pixelSize: 10 * s
+                                                color: root.accentColor
+                                                visible: root.clockStyle === modelData
+                                            }
+                                        }
+
+                                        MouseArea {
+                                            id: cStyleMa
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: root.clockStyle = modelData
+                                        }
+                                    }
+                                }
+                            }
+
+                            // 2. 9-Grid Position Picker
+                            Row {
+                                width: parent.width
+                                spacing: 14 * s
+
+                                Column {
+                                    spacing: 4 * s
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    Text {
+                                        text: "Screen Position"
+                                        font.family: root.sansFont
+                                        font.pixelSize: 12 * s
+                                        font.weight: Font.DemiBold
+                                        color: root.textSecondary
+                                    }
+                                    Text {
+                                        text: root.gridPositionNames[root.clockGridPos]
+                                        font.family: root.sansFont
+                                        font.pixelSize: 11 * s
+                                        font.weight: Font.Bold
+                                        color: root.accentColor
+                                    }
+                                }
+
+                                Grid {
+                                    columns: 3
+                                    spacing: 3 * s
+                                    anchors.verticalCenter: parent.verticalCenter
+
+                                    Repeater {
+                                        model: 9
+                                        delegate: Rectangle {
+                                            width: 28 * s
+                                            height: 18 * s
+                                            radius: 4 * s
+                                            color: root.clockGridPos === index ? root.accentColor : (cgMa.containsMouse ? Qt.alpha(root.accentColor, 0.3) : Qt.rgba(1, 1, 1, 0.08))
+                                            border.color: root.clockGridPos === index ? root.accentColor : Qt.rgba(1, 1, 1, 0.15)
+                                            border.width: 1 * s
+
+                                            Behavior on color { ColorAnimation { duration: 150 } }
+
+                                            Text {
+                                                anchors.centerIn: parent
+                                                text: index === 0 ? "TL" : index === 1 ? "TC" : index === 2 ? "TR" : index === 3 ? "ML" : index === 4 ? "MC" : index === 5 ? "MR" : index === 6 ? "BL" : index === 7 ? "BC" : "BR"
+                                                font.family: root.monoFont
+                                                font.pixelSize: 7 * s
+                                                font.weight: Font.Bold
+                                                color: root.clockGridPos === index ? "#ffffff" : root.textSecondary
+                                            }
+
+                                            MouseArea {
+                                                id: cgMa
+                                                anchors.fill: parent
+                                                hoverEnabled: true
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: root.clockGridPos = index
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // 3. Clock Scale Slider
+                            Column {
+                                width: parent.width
+                                spacing: 4 * s
+
+                                Row {
+                                    width: parent.width
+                                    Text {
+                                        text: "Clock Scale"
+                                        font.family: root.sansFont
+                                        font.pixelSize: 12 * s
+                                        font.weight: Font.DemiBold
+                                        color: root.textSecondary
+                                    }
+                                    Text {
+                                        anchors.right: parent.right
+                                        text: root.clockScale.toFixed(2) + "x"
+                                        font.family: root.monoFont
+                                        font.pixelSize: 11 * s
+                                        font.weight: Font.Bold
+                                        color: root.accentColor
+                                    }
+                                }
+
+                                Item {
+                                    width: parent.width
+                                    height: 24 * s
+
+                                    Rectangle {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        anchors.left: parent.left
+                                        anchors.right: parent.right
+                                        height: 5 * s
+                                        radius: 2.5 * s
+                                        color: Qt.rgba(1, 1, 1, 0.15)
+
+                                        Rectangle {
+                                            anchors.left: parent.left
+                                            anchors.top: parent.top
+                                            anchors.bottom: parent.bottom
+                                            width: clockHandle.x + clockHandle.width / 2
+                                            radius: 2.5 * s
+                                            color: root.accentColor
+                                        }
+                                    }
+
+                                    Rectangle {
+                                        id: clockHandle
+                                        width: 16 * s
+                                        height: 16 * s
+                                        radius: 8 * s
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        x: Math.max(0, Math.min(parent.width - width, ((root.clockScale - 0.6) / (2.2 - 0.6)) * (parent.width - width)))
+                                        color: "#ffffff"
+                                        border.color: root.accentColor
+                                        border.width: 2 * s
+                                    }
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onPositionChanged: (mouse) => {
+                                            if (pressed) {
+                                                var ratio = Math.max(0, Math.min(1, mouse.x / width))
+                                                root.clockScale = 0.6 + ratio * (2.2 - 0.6)
+                                            }
+                                        }
+                                        onPressed: (mouse) => {
+                                            var ratio = Math.max(0, Math.min(1, mouse.x / width))
+                                            root.clockScale = 0.6 + ratio * (2.2 - 0.6)
+                                        }
+                                    }
+                                }
+                            }
+
+                            // 4. Frosted Glass Background Card & Opacity
+                            Row {
+                                width: parent.width
+                                spacing: 10 * s
+
+                                Column {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    Text {
+                                        text: "Frosted Background Card"
+                                        font.family: root.sansFont
+                                        font.pixelSize: 12 * s
+                                        font.weight: Font.DemiBold
+                                        color: root.textPrimary
+                                    }
+                                    Text {
+                                        text: "Deep glass blur behind clock"
+                                        font.family: root.sansFont
+                                        font.pixelSize: 10 * s
+                                        color: root.textMuted
+                                    }
+                                }
+
+                                Rectangle {
+                                    anchors.right: parent.right
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: 38 * s
+                                    height: 22 * s
+                                    radius: 11 * s
+                                    color: root.clockCardEnabled ? root.accentColor : Qt.rgba(1, 1, 1, 0.15)
+                                    Behavior on color { ColorAnimation { duration: 180 } }
+
+                                    Rectangle {
+                                        width: 16 * s
+                                        height: 16 * s
+                                        radius: 8 * s
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        x: root.clockCardEnabled ? parent.width - width - 3 * s : 3 * s
+                                        color: "#ffffff"
+                                        Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                                    }
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: root.clockCardEnabled = !root.clockCardEnabled
+                                    }
+                                }
+                            }
+
+                            // Opacity Slider (when Card enabled)
+                            Column {
+                                width: parent.width
+                                spacing: 4 * s
+                                opacity: root.clockCardEnabled ? 1 : 0.4
+                                enabled: root.clockCardEnabled
+
+                                Row {
+                                    width: parent.width
+                                    Text {
+                                        text: "Card Opacity"
+                                        font.family: root.sansFont
+                                        font.pixelSize: 11 * s
+                                        color: root.textSecondary
+                                    }
+                                    Text {
+                                        anchors.right: parent.right
+                                        text: Math.round(root.clockCardOpacity * 100) + "%"
+                                        font.family: root.monoFont
+                                        font.pixelSize: 11 * s
+                                        font.weight: Font.Bold
+                                        color: root.accentColor
+                                    }
+                                }
+
+                                Item {
+                                    width: parent.width
+                                    height: 24 * s
+
+                                    Rectangle {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        anchors.left: parent.left
+                                        anchors.right: parent.right
+                                        height: 5 * s
+                                        radius: 2.5 * s
+                                        color: Qt.rgba(1, 1, 1, 0.15)
+
+                                        Rectangle {
+                                            anchors.left: parent.left
+                                            anchors.top: parent.top
+                                            anchors.bottom: parent.bottom
+                                            width: clockOpHandle.x + clockOpHandle.width / 2
+                                            radius: 2.5 * s
+                                            color: root.accentColor
+                                        }
+                                    }
+
+                                    Rectangle {
+                                        id: clockOpHandle
+                                        width: 16 * s
+                                        height: 16 * s
+                                        radius: 8 * s
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        x: Math.max(0, Math.min(parent.width - width, ((root.clockCardOpacity - 0.15) / (0.85 - 0.15)) * (parent.width - width)))
+                                        color: "#ffffff"
+                                        border.color: root.accentColor
+                                        border.width: 2 * s
+                                    }
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onPositionChanged: (mouse) => {
+                                            if (pressed) {
+                                                var ratio = Math.max(0, Math.min(1, mouse.x / width))
+                                                root.clockCardOpacity = 0.15 + ratio * (0.85 - 0.15)
+                                            }
+                                        }
+                                        onPressed: (mouse) => {
+                                            var ratio = Math.max(0, Math.min(1, mouse.x / width))
+                                            root.clockCardOpacity = 0.15 + ratio * (0.85 - 0.15)
+                                        }
+                                    }
+                                }
+                            }
+
+                            // 5. Show on Login Toggle
+                            Row {
+                                width: parent.width
+                                spacing: 10 * s
+
+                                Column {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    Text {
+                                        text: "Keep Clock Visible on Login"
+                                        font.family: root.sansFont
+                                        font.pixelSize: 12 * s
+                                        font.weight: Font.DemiBold
+                                        color: root.textPrimary
+                                    }
+                                    Text {
+                                        text: "Clock remains visible after unlock"
+                                        font.family: root.sansFont
+                                        font.pixelSize: 10 * s
+                                        color: root.textMuted
+                                    }
+                                }
+
+                                Rectangle {
+                                    anchors.right: parent.right
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: 38 * s
+                                    height: 22 * s
+                                    radius: 11 * s
+                                    color: root.clockShowOnLogin ? root.accentColor : Qt.rgba(1, 1, 1, 0.15)
+                                    Behavior on color { ColorAnimation { duration: 180 } }
+
+                                    Rectangle {
+                                        width: 16 * s
+                                        height: 16 * s
+                                        radius: 8 * s
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        x: root.clockShowOnLogin ? parent.width - width - 3 * s : 3 * s
+                                        color: "#ffffff"
+                                        Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                                    }
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: root.clockShowOnLogin = !root.clockShowOnLogin
+                                    }
+                                }
                             }
                         }
-                    }
 
-                    MouseArea {
-                        id: blobRowMa
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.showLavaBlobs = !root.showLavaBlobs
+                        // ══════════════════════════════════════════
+                        // TAB 1: LOGIN & BOX SETTINGS
+                        // ══════════════════════════════════════════
+                        Column {
+                            width: parent.width
+                            spacing: 10 * s
+                            visible: morphingSettingsContainer.currentTab === 1
+
+                            // 1. 9-Grid Position Picker
+                            Row {
+                                width: parent.width
+                                spacing: 14 * s
+
+                                Column {
+                                    spacing: 4 * s
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    Text {
+                                        text: "Container Position"
+                                        font.family: root.sansFont
+                                        font.pixelSize: 12 * s
+                                        font.weight: Font.DemiBold
+                                        color: root.textSecondary
+                                    }
+                                    Text {
+                                        text: root.gridPositionNames[root.loginGridPos]
+                                        font.family: root.sansFont
+                                        font.pixelSize: 11 * s
+                                        font.weight: Font.Bold
+                                        color: root.accentColor
+                                    }
+                                }
+
+                                Grid {
+                                    columns: 3
+                                    spacing: 3 * s
+                                    anchors.verticalCenter: parent.verticalCenter
+
+                                    Repeater {
+                                        model: 9
+                                        delegate: Rectangle {
+                                            width: 28 * s
+                                            height: 18 * s
+                                            radius: 4 * s
+                                            color: root.loginGridPos === index ? root.accentColor : (lgMa.containsMouse ? Qt.alpha(root.accentColor, 0.3) : Qt.rgba(1, 1, 1, 0.08))
+                                            border.color: root.loginGridPos === index ? root.accentColor : Qt.rgba(1, 1, 1, 0.15)
+                                            border.width: 1 * s
+
+                                            Behavior on color { ColorAnimation { duration: 150 } }
+
+                                            Text {
+                                                anchors.centerIn: parent
+                                                text: index === 0 ? "TL" : index === 1 ? "TC" : index === 2 ? "TR" : index === 3 ? "ML" : index === 4 ? "MC" : index === 5 ? "MR" : index === 6 ? "BL" : index === 7 ? "BC" : "BR"
+                                                font.family: root.monoFont
+                                                font.pixelSize: 7 * s
+                                                font.weight: Font.Bold
+                                                color: root.loginGridPos === index ? "#ffffff" : root.textSecondary
+                                            }
+
+                                            MouseArea {
+                                                id: lgMa
+                                                anchors.fill: parent
+                                                hoverEnabled: true
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: root.loginGridPos = index
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // 2. Container Scale Slider
+                            Column {
+                                width: parent.width
+                                spacing: 4 * s
+
+                                Row {
+                                    width: parent.width
+                                    Text {
+                                        text: "Container Scale"
+                                        font.family: root.sansFont
+                                        font.pixelSize: 12 * s
+                                        font.weight: Font.DemiBold
+                                        color: root.textSecondary
+                                    }
+                                    Text {
+                                        anchors.right: parent.right
+                                        text: root.loginScale.toFixed(2) + "x"
+                                        font.family: root.monoFont
+                                        font.pixelSize: 11 * s
+                                        font.weight: Font.Bold
+                                        color: root.accentColor
+                                    }
+                                }
+
+                                Item {
+                                    width: parent.width
+                                    height: 24 * s
+
+                                    Rectangle {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        anchors.left: parent.left
+                                        anchors.right: parent.right
+                                        height: 5 * s
+                                        radius: 2.5 * s
+                                        color: Qt.rgba(1, 1, 1, 0.15)
+
+                                        Rectangle {
+                                            anchors.left: parent.left
+                                            anchors.top: parent.top
+                                            anchors.bottom: parent.bottom
+                                            width: loginHandle.x + loginHandle.width / 2
+                                            radius: 2.5 * s
+                                            color: root.accentColor
+                                        }
+                                    }
+
+                                    Rectangle {
+                                        id: loginHandle
+                                        width: 16 * s
+                                        height: 16 * s
+                                        radius: 8 * s
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        x: Math.max(0, Math.min(parent.width - width, ((root.loginScale - 0.7) / (1.6 - 0.7)) * (parent.width - width)))
+                                        color: "#ffffff"
+                                        border.color: root.accentColor
+                                        border.width: 2 * s
+                                    }
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onPositionChanged: (mouse) => {
+                                            if (pressed) {
+                                                var ratio = Math.max(0, Math.min(1, mouse.x / width))
+                                                root.loginScale = 0.7 + ratio * (1.6 - 0.7)
+                                            }
+                                        }
+                                        onPressed: (mouse) => {
+                                            var ratio = Math.max(0, Math.min(1, mouse.x / width))
+                                            root.loginScale = 0.7 + ratio * (1.6 - 0.7)
+                                        }
+                                    }
+                                }
+                            }
+
+                            // 3. Avatar Relative Orientation
+                            Column {
+                                width: parent.width
+                                spacing: 4 * s
+
+                                Text {
+                                    text: "Avatar Orientation"
+                                    font.family: root.sansFont
+                                    font.pixelSize: 12 * s
+                                    font.weight: Font.DemiBold
+                                    color: root.textSecondary
+                                }
+
+                                Row {
+                                    spacing: 4 * s
+                                    width: parent.width
+
+                                    Repeater {
+                                        model: ["Right", "Left", "Top Center", "Top Left", "Top Right"]
+                                        delegate: Rectangle {
+                                            width: (tabContentCol.width - (4 * 4 * s)) / 5
+                                            height: 28 * s
+                                            radius: 6 * s
+                                            color: root.avatarOrientation === modelData ? Qt.alpha(root.accentColor, 0.35) : (aoMa.containsMouse ? Qt.alpha(root.accentColor, 0.15) : Qt.rgba(1, 1, 1, 0.06))
+                                            border.color: root.avatarOrientation === modelData ? root.accentColor : Qt.rgba(1, 1, 1, 0.10)
+                                            border.width: 1 * s
+
+                                            Behavior on color { ColorAnimation { duration: 150 } }
+
+                                            Text {
+                                                anchors.centerIn: parent
+                                                text: modelData === "Top Center" ? "Top Ctr" : modelData
+                                                font.family: root.sansFont
+                                                font.pixelSize: 9 * s
+                                                font.weight: root.avatarOrientation === modelData ? Font.Bold : Font.Normal
+                                                color: root.avatarOrientation === modelData ? "#ffffff" : root.textSecondary
+                                            }
+
+                                            MouseArea {
+                                                id: aoMa
+                                                anchors.fill: parent
+                                                hoverEnabled: true
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: root.avatarOrientation = modelData
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // 4. Password Box Style
+                            Column {
+                                width: parent.width
+                                spacing: 4 * s
+
+                                Text {
+                                    text: "Password Box Style"
+                                    font.family: root.sansFont
+                                    font.pixelSize: 12 * s
+                                    font.weight: Font.DemiBold
+                                    color: root.textSecondary
+                                }
+
+                                Grid {
+                                    columns: 2
+                                    spacing: 6 * s
+                                    width: parent.width
+
+                                    Repeater {
+                                        model: ["Glass Pill", "Minimal Underline", "Split Badge", "Sharp M3 Card"]
+                                        delegate: Rectangle {
+                                            width: (tabContentCol.width - 6 * s) / 2
+                                            height: 32 * s
+                                            radius: 8 * s
+                                            color: root.boxStyle === modelData ? Qt.alpha(root.accentColor, 0.35) : (bStyleMa.containsMouse ? Qt.alpha(root.accentColor, 0.15) : Qt.rgba(1, 1, 1, 0.06))
+                                            border.color: root.boxStyle === modelData ? root.accentColor : Qt.rgba(1, 1, 1, 0.10)
+                                            border.width: 1 * s
+
+                                            Behavior on color { ColorAnimation { duration: 150 } }
+
+                                            Row {
+                                                anchors.centerIn: parent
+                                                spacing: 6 * s
+
+                                                Text {
+                                                    text: modelData
+                                                    font.family: root.sansFont
+                                                    font.pixelSize: 11 * s
+                                                    font.weight: root.boxStyle === modelData ? Font.Bold : Font.Normal
+                                                    color: root.boxStyle === modelData ? "#ffffff" : root.textPrimary
+                                                }
+
+                                                Text {
+                                                    text: "󰄬"
+                                                    font.family: root.monoFont
+                                                    font.pixelSize: 10 * s
+                                                    color: root.accentColor
+                                                    visible: root.boxStyle === modelData
+                                                }
+                                            }
+
+                                            MouseArea {
+                                                id: bStyleMa
+                                                anchors.fill: parent
+                                                hoverEnabled: true
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: root.boxStyle = modelData
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // 5. Frosted Glass Background Card
+                            Row {
+                                width: parent.width
+                                spacing: 10 * s
+
+                                Column {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    Text {
+                                        text: "Frosted Background Card"
+                                        font.family: root.sansFont
+                                        font.pixelSize: 12 * s
+                                        font.weight: Font.DemiBold
+                                        color: root.textPrimary
+                                    }
+                                    Text {
+                                        text: "Deep glass card behind login controls"
+                                        font.family: root.sansFont
+                                        font.pixelSize: 10 * s
+                                        color: root.textMuted
+                                    }
+                                }
+
+                                Rectangle {
+                                    anchors.right: parent.right
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: 38 * s
+                                    height: 22 * s
+                                    radius: 11 * s
+                                    color: root.loginCardEnabled ? root.accentColor : Qt.rgba(1, 1, 1, 0.15)
+                                    Behavior on color { ColorAnimation { duration: 180 } }
+
+                                    Rectangle {
+                                        width: 16 * s
+                                        height: 16 * s
+                                        radius: 8 * s
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        x: root.loginCardEnabled ? parent.width - width - 3 * s : 3 * s
+                                        color: "#ffffff"
+                                        Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                                    }
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: root.loginCardEnabled = !root.loginCardEnabled
+                                    }
+                                }
+                            }
+                        }
+
+                        // ══════════════════════════════════════════
+                        // TAB 2: AVATAR & M3 SHAPES
+                        // ══════════════════════════════════════════
+                        Column {
+                            width: parent.width
+                            spacing: 12 * s
+                            visible: morphingSettingsContainer.currentTab === 2
+
+                            Text {
+                                text: "Select Material 3 Shape"
+                                font.family: root.sansFont
+                                font.pixelSize: 12 * s
+                                font.weight: Font.DemiBold
+                                color: root.textSecondary
+                            }
+
+                            // 11 Shapes Grid (with Triangle!)
+                            Grid {
+                                columns: 3
+                                spacing: 6 * s
+                                width: parent.width
+
+                                Repeater {
+                                    model: [
+                                        { name: "Triangle",        shape: MaterialShape.Triangle },
+                                        { name: "Cookie 9-Sided", shape: MaterialShape.Cookie9Sided },
+                                        { name: "Clamshell",      shape: MaterialShape.ClamShell },
+                                        { name: "Cookie 4-Sided", shape: MaterialShape.Cookie4Sided },
+                                        { name: "Cookie 7-Sided", shape: MaterialShape.Cookie7Sided },
+                                        { name: "Sunny",          shape: MaterialShape.Sunny },
+                                        { name: "Very Sunny",     shape: MaterialShape.VerySunny },
+                                        { name: "Square",         shape: MaterialShape.Square },
+                                        { name: "Circle",         shape: MaterialShape.Circle },
+                                        { name: "Diamond",        shape: MaterialShape.Diamond },
+                                        { name: "Heart",          shape: MaterialShape.Heart }
+                                    ]
+                                    delegate: Rectangle {
+                                        width: (tabContentCol.width - 12 * s) / 3
+                                        height: 30 * s
+                                        radius: 6 * s
+                                        color: root.avatarShape === modelData.name ? Qt.alpha(root.accentColor, 0.35) : (shGridMa.containsMouse ? Qt.alpha(root.accentColor, 0.15) : Qt.rgba(1, 1, 1, 0.06))
+                                        border.color: root.avatarShape === modelData.name ? root.accentColor : Qt.rgba(1, 1, 1, 0.10)
+                                        border.width: 1 * s
+
+                                        Behavior on color { ColorAnimation { duration: 150 } }
+
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: modelData.name
+                                            font.family: root.sansFont
+                                            font.pixelSize: 10 * s
+                                            font.weight: root.avatarShape === modelData.name ? Font.Bold : Font.Normal
+                                            color: root.avatarShape === modelData.name ? "#ffffff" : root.textPrimary
+                                        }
+
+                                        MouseArea {
+                                            id: shGridMa
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: {
+                                                root.avatarShape = modelData.name
+                                                root.currentM3Shape = modelData.shape
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Live Shape Preview
+                            Rectangle {
+                                width: parent.width
+                                height: 110 * s
+                                radius: 14 * s
+                                color: Qt.alpha(root.glassBg, 0.50)
+                                border.color: root.glassBorder
+                                border.width: 1 * s
+
+                                Row {
+                                    anchors.centerIn: parent
+                                    spacing: 20 * s
+
+                                    // Big M3 Shape Preview
+                                    Item {
+                                        width: 72 * s
+                                        height: 72 * s
+                                        anchors.verticalCenter: parent.verticalCenter
+
+                                        MaterialShape {
+                                            anchors.fill: parent
+                                            shape: root.currentM3Shape
+                                            animationDuration: 350
+                                            color: root.accentColor
+                                            Behavior on color { ColorAnimation { duration: 200 } }
+                                        }
+
+                                        Item {
+                                            anchors.fill: parent
+                                            anchors.margins: 4 * s
+
+                                            Image {
+                                                id: avatarPreviewImg
+                                                anchors.fill: parent
+                                                source: root.activeUser.icon !== "" ? root.activeUser.icon : "file:///home/" + root.activeUser.name + "/.face"
+                                                cache: false
+                                                fillMode: Image.PreserveAspectCrop
+                                                smooth: true
+                                                mipmap: true
+                                                visible: false
+                                            }
+
+                                            MaterialShape {
+                                                id: previewMask
+                                                anchors.fill: parent
+                                                shape: root.currentM3Shape
+                                                animationDuration: 350
+                                                color: "#ffffff"
+                                                visible: false
+                                            }
+
+                                            OpacityMask {
+                                                anchors.fill: parent
+                                                source: avatarPreviewImg
+                                                maskSource: previewMask
+                                                visible: avatarPreviewImg.status === Image.Ready
+                                            }
+
+                                            Text {
+                                                anchors.centerIn: parent
+                                                text: ""
+                                                font.family: root.monoFont
+                                                font.pixelSize: 28 * s
+                                                color: "#ffffff"
+                                                visible: avatarPreviewImg.status !== Image.Ready
+                                            }
+                                        }
+                                    }
+
+                                    Column {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        spacing: 4 * s
+
+                                        Text {
+                                            text: root.avatarShape
+                                            font.family: root.sansFont
+                                            font.pixelSize: 15 * s
+                                            font.weight: Font.Bold
+                                            color: "#ffffff"
+                                        }
+
+                                        Text {
+                                            text: "Kinetic morphing M3 geometry"
+                                            font.family: root.sansFont
+                                            font.pixelSize: 11 * s
+                                            color: root.textSecondary
+                                        }
+
+                                        Text {
+                                            text: "Used for avatar frame & typed dots"
+                                            font.family: root.sansFont
+                                            font.pixelSize: 10 * s
+                                            color: root.accentColor
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // ══════════════════════════════════════════
+                        // TAB 3: PALETTE & DISPLAY
+                        // ══════════════════════════════════════════
+                        Column {
+                            width: parent.width
+                            spacing: 12 * s
+                            visible: morphingSettingsContainer.currentTab === 3
+
+                            Text {
+                                text: "Theme Accent & Color Palette"
+                                font.family: root.sansFont
+                                font.pixelSize: 12 * s
+                                font.weight: Font.DemiBold
+                                color: root.textSecondary
+                            }
+
+                            Grid {
+                                columns: 2
+                                spacing: 6 * s
+                                width: parent.width
+
+                                Repeater {
+                                    model: [
+                                        { name: "Nothing Red",       color: "#ff3b30" },
+                                        { name: "Catppuccin Mocha", color: "#cba6f7" },
+                                        { name: "Nord",             color: "#88c0d0" },
+                                        { name: "Tokyo Night",      color: "#7aa2f7" },
+                                        { name: "Rose Pine",        color: "#ebbcba" },
+                                        { name: "Dracula",          color: "#bd93f9" }
+                                    ]
+                                    delegate: Rectangle {
+                                        width: (tabContentCol.width - 6 * s) / 2
+                                        height: 36 * s
+                                        radius: 8 * s
+                                        color: root.colorScheme === modelData.name ? Qt.alpha(modelData.color, 0.35) : (palGridMa.containsMouse ? Qt.alpha(modelData.color, 0.15) : Qt.rgba(1, 1, 1, 0.06))
+                                        border.color: root.colorScheme === modelData.name ? modelData.color : Qt.rgba(1, 1, 1, 0.10)
+                                        border.width: 1 * s
+
+                                        Behavior on color { ColorAnimation { duration: 150 } }
+
+                                        Row {
+                                            anchors.left: parent.left
+                                            anchors.leftMargin: 10 * s
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            spacing: 8 * s
+
+                                            Rectangle {
+                                                width: 12 * s
+                                                height: 12 * s
+                                                radius: 6 * s
+                                                color: modelData.color
+                                                anchors.verticalCenter: parent.verticalCenter
+                                            }
+
+                                            Text {
+                                                text: modelData.name
+                                                font.family: root.sansFont
+                                                font.pixelSize: 11 * s
+                                                font.weight: root.colorScheme === modelData.name ? Font.Bold : Font.Normal
+                                                color: root.colorScheme === modelData.name ? "#ffffff" : root.textPrimary
+                                                anchors.verticalCenter: parent.verticalCenter
+                                            }
+                                        }
+
+                                        Text {
+                                            anchors.right: parent.right
+                                            anchors.rightMargin: 10 * s
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            text: "󰄬"
+                                            font.family: root.monoFont
+                                            font.pixelSize: 11 * s
+                                            color: modelData.color
+                                            visible: root.colorScheme === modelData.name
+                                        }
+
+                                        MouseArea {
+                                            id: palGridMa
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: root.colorScheme = modelData.name
+                                        }
+                                    }
+                                }
+                            }
+
+                            // 12-Hour Clock
+                            Row {
+                                width: parent.width
+                                spacing: 10 * s
+
+                                Column {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    Text {
+                                        text: "12-Hour Clock Format"
+                                        font.family: root.sansFont
+                                        font.pixelSize: 12 * s
+                                        font.weight: Font.DemiBold
+                                        color: root.textPrimary
+                                    }
+                                    Text {
+                                        text: "Display time with AM/PM indicators"
+                                        font.family: root.sansFont
+                                        font.pixelSize: 10 * s
+                                        color: root.textMuted
+                                    }
+                                }
+
+                                Rectangle {
+                                    anchors.right: parent.right
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: 38 * s
+                                    height: 22 * s
+                                    radius: 11 * s
+                                    color: root.is12Hour ? root.accentColor : Qt.rgba(1, 1, 1, 0.15)
+                                    Behavior on color { ColorAnimation { duration: 180 } }
+
+                                    Rectangle {
+                                        width: 16 * s
+                                        height: 16 * s
+                                        radius: 8 * s
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        x: root.is12Hour ? parent.width - width - 3 * s : 3 * s
+                                        color: "#ffffff"
+                                        Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                                    }
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: root.is12Hour = !root.is12Hour
+                                    }
+                                }
+                            }
+
+                            // Lava Lamp Blobs
+                            Row {
+                                width: parent.width
+                                spacing: 10 * s
+
+                                Column {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    Text {
+                                        text: "Ambient Lava Blobs"
+                                        font.family: root.sansFont
+                                        font.pixelSize: 12 * s
+                                        font.weight: Font.DemiBold
+                                        color: root.textPrimary
+                                    }
+                                    Text {
+                                        text: "Smooth ambient blobs on idle screen"
+                                        font.family: root.sansFont
+                                        font.pixelSize: 10 * s
+                                        color: root.textMuted
+                                    }
+                                }
+
+                                Rectangle {
+                                    anchors.right: parent.right
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: 38 * s
+                                    height: 22 * s
+                                    radius: 11 * s
+                                    color: root.showLavaBlobs ? root.accentColor : Qt.rgba(1, 1, 1, 0.15)
+                                    Behavior on color { ColorAnimation { duration: 180 } }
+
+                                    Rectangle {
+                                        width: 16 * s
+                                        height: 16 * s
+                                        radius: 8 * s
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        x: root.showLavaBlobs ? parent.width - width - 3 * s : 3 * s
+                                        color: "#ffffff"
+                                        Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+                                    }
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: root.showLavaBlobs = !root.showLavaBlobs
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
