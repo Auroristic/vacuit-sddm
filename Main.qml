@@ -1116,10 +1116,14 @@ Rectangle {
                                             width: 10 * s
                                             height: 10 * s
                                             shape: root.passwordM3Shapes[index % root.passwordM3Shapes.length]
-                                            color: root.accentColor
+                                            color: "#ffffff"
                                             scale: dotWrapper.isShown ? 1.0 : 0.0
+                                            rotation: dotWrapper.isShown ? 0 : -25
 
                                             Behavior on scale {
+                                                NumberAnimation { duration: 200; easing.type: Easing.OutBack }
+                                            }
+                                            Behavior on rotation {
                                                 NumberAnimation { duration: 200; easing.type: Easing.OutBack }
                                             }
                                             Behavior on color {
@@ -1129,13 +1133,13 @@ Rectangle {
                                     }
                                 }
 
-                                // Pulsing Glowing Cursor Dot
+                                // Pulsing Glowing Cursor Dot (Only visible when typing, never overlaps placeholder!)
                                 Item {
                                     id: cursorPill
                                     width: 8 * s
                                     height: 8 * s
                                     anchors.verticalCenter: parent.verticalCenter
-                                    visible: passwordInput.activeFocus
+                                    visible: passwordInput.activeFocus && passwordInput.text.length > 0
 
                                     Rectangle {
                                         anchors.fill: parent
