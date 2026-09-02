@@ -138,6 +138,50 @@ Rectangle {
     property real loginScale: 1.0 // 0.7 to 1.6
     property real avatarScale: 1.0 // 0.6 to 1.4
     property int glassBlurRadius: 48 // 16 to 80
+
+    // ──────────────────────────────────────────
+    // Shared Frosted Glass Backdrop Component
+    // ──────────────────────────────────────────
+    component FrostedGlassCard: Item {
+        id: glassBackdrop
+        anchors.fill: parent
+        z: -1
+
+        property real radius: parent && parent.radius !== undefined ? parent.radius : 16 * s
+        property color tintColor: root.glassBg
+        property color borderColor: root.glassBorder
+        property real borderWidth: 1.2 * s
+
+        layer.enabled: true
+        layer.effect: OpacityMask {
+            maskSource: Rectangle {
+                width: glassBackdrop.width
+                height: glassBackdrop.height
+                radius: glassBackdrop.radius
+            }
+        }
+
+        ShaderEffectSource {
+            anchors.fill: parent
+            sourceItem: fullGlassBlur
+            live: true
+            recursive: false
+            sourceRect: Qt.rect(
+                glassBackdrop.mapToItem(root, 0, 0).x,
+                glassBackdrop.mapToItem(root, 0, 0).y,
+                glassBackdrop.width,
+                glassBackdrop.height
+            )
+        }
+
+        Rectangle {
+            anchors.fill: parent
+            radius: glassBackdrop.radius
+            color: glassBackdrop.tintColor
+            border.color: glassBackdrop.borderColor
+            border.width: glassBackdrop.borderWidth
+        }
+    }
     property bool loginCardEnabled: false
     property real loginCardOpacity: 0.40 // 0.15 to 0.85
     property string avatarOrientation: "Right" // "Right", "Left", "Top Center", "Top Left", "Top Right"
@@ -498,13 +542,13 @@ Rectangle {
     }
     }
 
-    // Live Real-Time FastBlur of the entire background scene for FrostedGlassCard!
+    // Shared Gaussian Blur Source for Frosted Glass Cards
     FastBlur {
         id: fullGlassBlur
-        anchors.fill: bgSceneLayer
-        source: bgSceneLayer
+        anchors.fill: parent
+        source: bgSharp
         radius: root.glassBlurRadius
-        z: -999
+        visible: false
     }
 
     // Background Click Handler
