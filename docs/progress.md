@@ -141,7 +141,7 @@ Build a production-grade, bug-free, high-performance SDDM Qt6 theme based on Cae
   - Transitions: `Behavior on x` and `Behavior on y` with `Easing.OutCubic` (450ms) for smooth kinetic glide.
 - Implement Scale Slider (0.6x to 2.2x). (Completed)
 - Implement Toggleable Frosted Glass Background Card with opacity control (15% to 85%). (Completed)
-- Ensure clock remains optionally visible in the unlocked/login state. (Completed)
+- Clock is strictly displayed on the intro screen and fades out smoothly to 0 upon unlock. (Completed and verified)
 
 ### Task 3: Login Container Customization System (Completed and Verified)
 - Implement 9-Grid Screen Positioning for Login & Avatar Container with kinetic glide. (Completed)
