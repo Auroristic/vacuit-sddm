@@ -284,6 +284,17 @@ Rectangle {
         root.avatarOrientMenuOpen = false
     }
 
+    Timer {
+        id: settingsCloseCleanupTimer
+        interval: 420
+        repeat: false
+        onTriggered: {
+            if (!root.settingsOpen) {
+                closeAllSettingsDrawers()
+            }
+        }
+    }
+
     function getGridPosName(idx) {
         var names = [
             "Top Left",    "Top Center",    "Top Right",
@@ -316,6 +327,7 @@ Rectangle {
             root.sessionMenuOpen = false
         } else if (root.settingsOpen) {
             root.settingsOpen = false
+            settingsCloseCleanupTimer.restart()
             if (root.isUnlocked) passwordInput.forceActiveFocus()
         } else if (root.powerMenuOpen) {
             root.powerMenuOpen = false
@@ -416,50 +428,54 @@ Rectangle {
         Behavior on opacity { NumberAnimation { duration: 600; easing.type: Easing.OutCubic } }
     }
 
-    // Ambient floating lava lamp glowing blobs
+    // Ambient floating lava lamp geometric shapes (Triangles, Cookies, Diamonds, etc.)
     Item {
         id: ambientShapesContainer
         anchors.fill: parent
         visible: root.showLavaBlobs
-        opacity: root.isUnlocked ? 0.50 : 0.85
+        opacity: root.isUnlocked ? 0.22 : 0.38
         Behavior on opacity { NumberAnimation { duration: 600 } }
 
         Repeater {
             model: 7
-            delegate: Rectangle {
-                id: shapeItem
-                property real initialX: (index * 280 + 60) * s
-                property real initialY: ((index * 170) % 650 + 50) * s
-                property real targetX: initialX + (index % 2 === 0 ? 110 * s : -110 * s)
-                property real targetY: initialY + (index % 2 === 0 ? 150 * s : -130 * s)
+            delegate: Item {
+                id: shapeWrapper
+                property real initialX: (index * 260 + 70) * s
+                property real initialY: ((index * 190) % 650 + 60) * s
+                property real targetX: initialX + (index % 2 === 0 ? 90 * s : -90 * s)
+                property real targetY: initialY + (index % 2 === 0 ? 110 * s : -100 * s)
                 x: initialX
                 y: initialY
-                width: (200 + (index % 4) * 75) * s
+                width: (110 + (index % 4) * 40) * s
                 height: width
-                radius: width / 2
-                color: Qt.alpha(root.accentColor, 0.28)
-                border.color: Qt.alpha(root.accentColor, 0.50)
-                border.width: 1.5 * s
 
-                layer.enabled: true
-                layer.effect: DropShadow {
-                    color: root.accentColor
-                    radius: 40
-                    samples: 20
-                    horizontalOffset: 0
-                    verticalOffset: 0
+                MaterialShape {
+                    anchors.fill: parent
+                    shape: [
+                        MaterialShape.Triangle,
+                        MaterialShape.Cookie9Sided,
+                        MaterialShape.Diamond,
+                        MaterialShape.Sunny,
+                        MaterialShape.Triangle,
+                        MaterialShape.Cookie4Sided,
+                        MaterialShape.ClamShell
+                    ][index % 7]
+                    color: Qt.alpha(root.accentColor, 0.22)
+                    animationDuration: 800
                 }
 
                 SequentialAnimation {
                     loops: Animation.Infinite
                     running: root.showLavaBlobs
                     ParallelAnimation {
-                        NumberAnimation { target: shapeItem; property: "x"; to: shapeItem.targetX; duration: 7500 + index * 1000; easing.type: Easing.InOutSine }
-                        NumberAnimation { target: shapeItem; property: "y"; to: shapeItem.targetY; duration: 6500 + index * 900; easing.type: Easing.InOutSine }
+                        NumberAnimation { target: shapeWrapper; property: "x"; to: shapeWrapper.targetX; duration: 7500 + index * 1000; easing.type: Easing.InOutSine }
+                        NumberAnimation { target: shapeWrapper; property: "y"; to: shapeWrapper.targetY; duration: 6500 + index * 900; easing.type: Easing.InOutSine }
+                        NumberAnimation { target: shapeWrapper; property: "rotation"; to: 180; duration: 14000 + index * 2000; easing.type: Easing.InOutSine }
                     }
                     ParallelAnimation {
-                        NumberAnimation { target: shapeItem; property: "x"; to: shapeItem.initialX; duration: 7500 + index * 1000; easing.type: Easing.InOutSine }
-                        NumberAnimation { target: shapeItem; property: "y"; to: shapeItem.initialY; duration: 6500 + index * 900; easing.type: Easing.InOutSine }
+                        NumberAnimation { target: shapeWrapper; property: "x"; to: shapeWrapper.initialX; duration: 7500 + index * 1000; easing.type: Easing.InOutSine }
+                        NumberAnimation { target: shapeWrapper; property: "y"; to: shapeWrapper.initialY; duration: 6500 + index * 900; easing.type: Easing.InOutSine }
+                        NumberAnimation { target: shapeWrapper; property: "rotation"; to: 0; duration: 14000 + index * 2000; easing.type: Easing.InOutSine }
                     }
                 }
             }
@@ -492,9 +508,7 @@ Rectangle {
         onClicked: {
             if (root.settingsOpen) {
                 root.settingsOpen = false
-                root.shapeMenuOpen = false
-                root.paletteMenuOpen = false
-                root.boxMenuOpen = false
+                settingsCloseCleanupTimer.restart()
                 return
             }
             if (root.userListOpen) { root.userListOpen = false; return }
@@ -997,10 +1011,6 @@ Rectangle {
                     border.width: root.boxStyle === "Minimal Underline" ? 0 : 1.5 * s
 
                     property real pressBloom: 0.0
-                    property real rippleScale: 0.0
-                    property real rippleOpacity: 0.0
-                    property real rippleX: width / 2
-                    property real rippleY: height / 2
 
                     layer.enabled: true
                     layer.effect: DropShadow {
@@ -1019,44 +1029,19 @@ Rectangle {
                         id: bloomAnim
                         target: passwordBoxRect
                         property: "pressBloom"
-                        from: 0.50
+                        from: 0.55
                         to: 0.0
                         duration: 350
                         easing.type: Easing.OutQuad
                     }
 
-                    ParallelAnimation {
-                        id: rippleAnim
-                        NumberAnimation { target: passwordBoxRect; property: "rippleScale"; from: 0.1; to: 1.0; duration: 400; easing.type: Easing.OutCubic }
-                        NumberAnimation { target: passwordBoxRect; property: "rippleOpacity"; from: 0.45; to: 0.0; duration: 400; easing.type: Easing.OutQuad }
-                    }
-
-                    // Inner Pill-Conforming Glow (Always matched to pill radius, zero rectangular clipping!)
+                    // Inner Pill-Conforming Glow (Always strictly matched to parent.radius, ZERO rectangular scissor clipping!)
                     Rectangle {
                         anchors.fill: parent
                         radius: parent.radius
-                        color: Qt.alpha(root.accentColor, 0.35)
+                        color: Qt.alpha(root.accentColor, 0.38)
                         opacity: passwordBoxRect.pressBloom
                         visible: opacity > 0
-                    }
-
-                    // Pill-Conforming Expanding Radial Ripple (Centered on mouse click point!)
-                    Rectangle {
-                        anchors.fill: parent
-                        radius: parent.radius
-                        clip: true
-                        color: "transparent"
-
-                        Rectangle {
-                            x: passwordBoxRect.rippleX - width / 2
-                            y: passwordBoxRect.rippleY - height / 2
-                            width: passwordBoxRect.width * 1.6 * passwordBoxRect.rippleScale
-                            height: width
-                            radius: width / 2
-                            color: Qt.alpha(root.accentColor, 0.30)
-                            opacity: passwordBoxRect.rippleOpacity
-                            visible: opacity > 0
-                        }
                     }
 
                     // Minimal Underline glowing bar
@@ -1235,19 +1220,16 @@ Rectangle {
                         }
                     }
 
-                    // Click Bloom & Radial Ripple Feedback across entire box
+                    // Click Bloom Feedback across entire box (Zero scissor clipping!)
                     MouseArea {
                         id: boxPressMa
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.IBeamCursor
                         z: 1
-                        onPressed: function(mouse) {
+                        onPressed: {
                             passwordInput.forceActiveFocus()
-                            passwordBoxRect.rippleX = mouse.x
-                            passwordBoxRect.rippleY = mouse.y
                             bloomAnim.restart()
-                            rippleAnim.restart()
                         }
                     }
 
@@ -1461,24 +1443,27 @@ Rectangle {
         anchors.right: (loginPanelContainer.x < 200 * s) ? undefined : loginPanelContainer.right
         anchors.top: (loginPanelContainer.y < 250 * s) ? loginPanelContainer.bottom : undefined
         anchors.bottom: (loginPanelContainer.y < 250 * s) ? undefined : loginPanelContainer.top
-        anchors.topMargin: 10 * s
-        anchors.bottomMargin: 10 * s
+        anchors.topMargin: root.userListOpen ? 12 * s : 4 * s
+        anchors.bottomMargin: root.userListOpen ? 12 * s : 4 * s
         width: 260 * s
-        height: root.userListOpen ? (46 * s + root.mockUserList.length * 44 * s) : 0
+        height: 46 * s + root.mockUserList.length * 44 * s
         radius: 18 * s
         color: root.glassBg
         border.color: root.glassBorder
         border.width: 1 * s
-        clip: true
-        visible: root.userListOpen
-        opacity: root.userListOpen ? 1 : 0
+        visible: opacity > 0
+        opacity: root.userListOpen ? 1.0 : 0.0
+        scale: root.userListOpen ? 1.0 : 0.84
+        transformOrigin: (loginPanelContainer.y < 250 * s) ? Item.TopRight : Item.BottomRight
         z: 60
 
         layer.enabled: true
         layer.effect: DropShadow { color: "#50000000"; radius: 20; samples: 16 }
 
-        Behavior on height { NumberAnimation { duration: 320; easing.type: Easing.OutCubic } }
-        Behavior on opacity { NumberAnimation { duration: 220 } }
+        Behavior on opacity { NumberAnimation { duration: 240; easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: 280; easing.type: root.userListOpen ? Easing.OutBack : Easing.OutCubic } }
+        Behavior on anchors.topMargin { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
+        Behavior on anchors.bottomMargin { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
         Behavior on color { ColorAnimation { duration: 250 } }
         Behavior on border.color { ColorAnimation { duration: 250 } }
 
@@ -1761,7 +1746,7 @@ property int currentTab: 0
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
                                 root.settingsOpen = false
-                                closeAllSettingsDrawers()
+                                settingsCloseCleanupTimer.restart()
                             }
                         }
                     }
