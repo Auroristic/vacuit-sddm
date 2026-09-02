@@ -1561,15 +1561,38 @@ Rectangle {
             z: 50
 
             property int currentTab: 0
+            property bool isTransitioningHeight: false
+
+            onCurrentTabChanged: {
+                isTransitioningHeight = true
+                heightTransitionTimer.restart()
+            }
+
+            Connections {
+                target: root
+                function onSettingsOpenChanged() {
+                    morphingSettingsContainer.isTransitioningHeight = true
+                    heightTransitionTimer.restart()
+                }
+            }
+
+            Timer {
+                id: heightTransitionTimer
+                interval: 340
+                onTriggered: morphingSettingsContainer.isTransitioningHeight = false
+            }
 
             layer.enabled: true
             layer.effect: DropShadow { color: "#50000000"; radius: root.settingsOpen ? 22 : 16; samples: 16 }
 
-            Behavior on width { NumberAnimation { duration: 420; easing.type: Easing.OutCubic } }
-            Behavior on height { NumberAnimation { duration: 420; easing.type: Easing.OutCubic } }
-            Behavior on radius { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
-            Behavior on color { ColorAnimation { duration: 250 } }
-            Behavior on border.color { ColorAnimation { duration: 250 } }
+            Behavior on width { NumberAnimation { duration: 320; easing.type: Easing.OutCubic } }
+            Behavior on height {
+                enabled: morphingSettingsContainer.isTransitioningHeight
+                NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
+            }
+            Behavior on radius { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
+            Behavior on color { ColorAnimation { duration: 200 } }
+            Behavior on border.color { ColorAnimation { duration: 200 } }
 
             // Collapsed View: Gear Icon Button
             Item {
@@ -1612,7 +1635,7 @@ Rectangle {
                 spacing: 4 * s
                 visible: root.settingsOpen
                 opacity: root.settingsOpen ? 1 : 0
-                Behavior on opacity { NumberAnimation { duration: 250 } }
+                Behavior on opacity { NumberAnimation { duration: 220 } }
 
                 // Top Header Row
                 Item {
@@ -1659,7 +1682,7 @@ Rectangle {
                     }
                 }
 
-                // Top Tab Bar (Caelestia Glass Desktop Style from recording_20260902_22-41-06.mp4)
+                // Top Tab Bar (Caelestia Glass Desktop Style)
                 Rectangle {
                     width: parent.width
                     height: 34 * s
@@ -1739,15 +1762,16 @@ Rectangle {
 
                     // Row 0.1: Clock Style
                     Rectangle {
+                        id: clockStyleRow
                         width: parent.width
-                        height: root.clockStyleMenuOpen ? (48 * s + clockStyleDrawer.height) : 48 * s
+                        height: root.clockStyleMenuOpen ? (48 * s + 112 * s) : 48 * s
                         topLeftRadius: 14 * s
                         topRightRadius: 14 * s
                         bottomLeftRadius: 4 * s
                         bottomRightRadius: 4 * s
                         clip: true
                         color: clockStyleRowMa.containsMouse || root.clockStyleMenuOpen ? Qt.alpha(root.accentColor, 0.20) : Qt.alpha(root.accentColor, 0.08)
-                        Behavior on height { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
+                        Behavior on height { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
                         Behavior on color { ColorAnimation { duration: 200 } }
 
                         Item {
@@ -1851,8 +1875,9 @@ Rectangle {
                             anchors.right: parent.right
                             anchors.leftMargin: 8 * s
                             anchors.rightMargin: 8 * s
-                            height: root.clockStyleMenuOpen ? 112 * s : 0
-                            visible: root.clockStyleMenuOpen
+                            height: 112 * s
+                            visible: clockStyleRow.height > 52 * s
+                            clip: true
 
                             ListView {
                                 anchors.fill: parent
@@ -1894,7 +1919,6 @@ Rectangle {
                                         cursorShape: Qt.PointingHandCursor
                                         onClicked: {
                                             root.clockStyle = modelData
-                                            root.clockStyleMenuOpen = false
                                         }
                                     }
                                 }
@@ -1904,12 +1928,13 @@ Rectangle {
 
                     // Row 0.2: Clock Position (9-Grid Interactive Picker)
                     Rectangle {
+                        id: clockPosRow
                         width: parent.width
-                        height: root.clockPosMenuOpen ? (48 * s + clockPosDrawer.height) : 48 * s
+                        height: root.clockPosMenuOpen ? (48 * s + 90 * s) : 48 * s
                         radius: 4 * s
                         clip: true
                         color: clockPosRowMa.containsMouse || root.clockPosMenuOpen ? Qt.alpha(root.accentColor, 0.20) : Qt.alpha(root.accentColor, 0.08)
-                        Behavior on height { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
+                        Behavior on height { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
                         Behavior on color { ColorAnimation { duration: 200 } }
 
                         Item {
@@ -2011,8 +2036,9 @@ Rectangle {
                             anchors.top: clockPosHeaderBar.bottom
                             anchors.left: parent.left
                             anchors.right: parent.right
-                            height: root.clockPosMenuOpen ? 90 * s : 0
-                            visible: root.clockPosMenuOpen
+                            height: 90 * s
+                            visible: clockPosRow.height > 52 * s
+                            clip: true
 
                             Grid {
                                 anchors.centerIn: parent
@@ -2046,7 +2072,6 @@ Rectangle {
                                             cursorShape: Qt.PointingHandCursor
                                             onClicked: {
                                                 root.clockGridPos = index
-                                                root.clockPosMenuOpen = false
                                             }
                                         }
                                     }
@@ -2230,15 +2255,16 @@ Rectangle {
 
                     // Row 1.1: Password Box Style
                     Rectangle {
+                        id: boxStyleRow
                         width: parent.width
-                        height: root.boxMenuOpen ? (48 * s + boxStyleDrawer.height) : 48 * s
+                        height: root.boxMenuOpen ? (48 * s + 112 * s) : 48 * s
                         topLeftRadius: 14 * s
                         topRightRadius: 14 * s
                         bottomLeftRadius: 4 * s
                         bottomRightRadius: 4 * s
                         clip: true
                         color: boxStyleRowMa.containsMouse || root.boxMenuOpen ? Qt.alpha(root.accentColor, 0.20) : Qt.alpha(root.accentColor, 0.08)
-                        Behavior on height { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
+                        Behavior on height { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
                         Behavior on color { ColorAnimation { duration: 200 } }
 
                         Item {
@@ -2343,8 +2369,9 @@ Rectangle {
                             anchors.right: parent.right
                             anchors.leftMargin: 8 * s
                             anchors.rightMargin: 8 * s
-                            height: root.boxMenuOpen ? 112 * s : 0
-                            visible: root.boxMenuOpen
+                            height: 112 * s
+                            visible: boxStyleRow.height > 52 * s
+                            clip: true
 
                             ListView {
                                 anchors.fill: parent
@@ -2387,7 +2414,6 @@ Rectangle {
                                         onClicked: {
                                             root.boxStyle = modelData
                                             root.boxShape = modelData
-                                            root.boxMenuOpen = false
                                         }
                                     }
                                 }
@@ -2397,12 +2423,13 @@ Rectangle {
 
                     // Row 1.2: Login Screen Position (9-Grid Interactive Picker)
                     Rectangle {
+                        id: loginPosRow
                         width: parent.width
-                        height: root.loginPosMenuOpen ? (48 * s + loginPosDrawer.height) : 48 * s
+                        height: root.loginPosMenuOpen ? (48 * s + 90 * s) : 48 * s
                         radius: 4 * s
                         clip: true
                         color: loginPosRowMa.containsMouse || root.loginPosMenuOpen ? Qt.alpha(root.accentColor, 0.20) : Qt.alpha(root.accentColor, 0.08)
-                        Behavior on height { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
+                        Behavior on height { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
                         Behavior on color { ColorAnimation { duration: 200 } }
 
                         Item {
@@ -2505,8 +2532,9 @@ Rectangle {
                             anchors.top: loginPosHeaderBar.bottom
                             anchors.left: parent.left
                             anchors.right: parent.right
-                            height: root.loginPosMenuOpen ? 90 * s : 0
-                            visible: root.loginPosMenuOpen
+                            height: 90 * s
+                            visible: loginPosRow.height > 52 * s
+                            clip: true
 
                             Grid {
                                 anchors.centerIn: parent
@@ -2540,7 +2568,6 @@ Rectangle {
                                             cursorShape: Qt.PointingHandCursor
                                             onClicked: {
                                                 root.loginGridPos = index
-                                                root.loginPosMenuOpen = false
                                             }
                                         }
                                     }
@@ -2551,12 +2578,13 @@ Rectangle {
 
                     // Row 1.3: Avatar Orientation
                     Rectangle {
+                        id: avatarOrientRow
                         width: parent.width
-                        height: root.avatarOrientMenuOpen ? (48 * s + avatarOrientDrawer.height) : 48 * s
+                        height: root.avatarOrientMenuOpen ? (48 * s + 138 * s) : 48 * s
                         radius: 4 * s
                         clip: true
                         color: avatarOrientRowMa.containsMouse || root.avatarOrientMenuOpen ? Qt.alpha(root.accentColor, 0.20) : Qt.alpha(root.accentColor, 0.08)
-                        Behavior on height { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
+                        Behavior on height { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
                         Behavior on color { ColorAnimation { duration: 200 } }
 
                         Item {
@@ -2661,8 +2689,9 @@ Rectangle {
                             anchors.right: parent.right
                             anchors.leftMargin: 8 * s
                             anchors.rightMargin: 8 * s
-                            height: root.avatarOrientMenuOpen ? 138 * s : 0
-                            visible: root.avatarOrientMenuOpen
+                            height: 138 * s
+                            visible: avatarOrientRow.height > 52 * s
+                            clip: true
 
                             ListView {
                                 anchors.fill: parent
@@ -2704,7 +2733,6 @@ Rectangle {
                                         cursorShape: Qt.PointingHandCursor
                                         onClicked: {
                                             root.avatarOrientation = modelData
-                                            root.avatarOrientMenuOpen = false
                                         }
                                     }
                                 }
@@ -2889,14 +2917,14 @@ Rectangle {
                     Rectangle {
                         id: rowShape
                         width: parent.width
-                        height: root.shapeMenuOpen ? (48 * s + shapeDrawer.height) : 48 * s
+                        height: root.shapeMenuOpen ? (48 * s + 140 * s) : 48 * s
                         topLeftRadius: 14 * s
                         topRightRadius: 14 * s
                         bottomLeftRadius: 4 * s
                         bottomRightRadius: 4 * s
                         clip: true
                         color: shapeRowMa.containsMouse || root.shapeMenuOpen ? Qt.alpha(root.accentColor, 0.20) : Qt.alpha(root.accentColor, 0.08)
-                        Behavior on height { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
+                        Behavior on height { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
                         Behavior on color { ColorAnimation { duration: 200 } }
 
                         Item {
@@ -2999,8 +3027,9 @@ Rectangle {
                             anchors.right: parent.right
                             anchors.leftMargin: 8 * s
                             anchors.rightMargin: 8 * s
-                            height: root.shapeMenuOpen ? 140 * s : 0
-                            visible: root.shapeMenuOpen
+                            height: 140 * s
+                            visible: rowShape.height > 52 * s
+                            clip: true
 
                             ListView {
                                 anchors.fill: parent
@@ -3055,7 +3084,6 @@ Rectangle {
                                         onClicked: {
                                             root.avatarShape = modelData.name
                                             root.currentM3Shape = modelData.shape
-                                            root.shapeMenuOpen = false
                                         }
                                     }
                                 }
@@ -3165,15 +3193,16 @@ Rectangle {
 
                     // Row 3.1: Color Palette
                     Rectangle {
+                        id: rowPal
                         width: parent.width
-                        height: root.paletteMenuOpen ? (48 * s + palDrawer.height) : 48 * s
+                        height: root.paletteMenuOpen ? (48 * s + 140 * s) : 48 * s
                         topLeftRadius: 14 * s
                         topRightRadius: 14 * s
                         bottomLeftRadius: 4 * s
                         bottomRightRadius: 4 * s
                         clip: true
                         color: palRowMa.containsMouse || root.paletteMenuOpen ? Qt.alpha(root.accentColor, 0.20) : Qt.alpha(root.accentColor, 0.08)
-                        Behavior on height { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
+                        Behavior on height { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
                         Behavior on color { ColorAnimation { duration: 200 } }
 
                         Item {
@@ -3276,8 +3305,9 @@ Rectangle {
                             anchors.right: parent.right
                             anchors.leftMargin: 8 * s
                             anchors.rightMargin: 8 * s
-                            height: root.paletteMenuOpen ? 140 * s : 0
-                            visible: root.paletteMenuOpen
+                            height: 140 * s
+                            visible: rowPal.height > 52 * s
+                            clip: true
 
                             ListView {
                                 anchors.fill: parent
@@ -3339,7 +3369,6 @@ Rectangle {
                                         cursorShape: Qt.PointingHandCursor
                                         onClicked: {
                                             root.colorScheme = modelData.name
-                                            root.paletteMenuOpen = false
                                         }
                                     }
                                 }
