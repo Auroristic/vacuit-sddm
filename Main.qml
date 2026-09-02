@@ -109,8 +109,8 @@ Rectangle {
     function getGridY(posIndex, itemH, marginY, bottomReserved) {
         var row = Math.floor(posIndex / 3)
         if (row === 0) return marginY
-        if (row === 1) return (root.height - itemH - bottomReserved) / 2
-        return root.height - itemH - marginY - bottomReserved
+        if (row === 1) return (root.height - itemH) / 2
+        return root.height - itemH - bottomReserved
     }
 
     // ──────────────────────────────────────────
@@ -513,16 +513,36 @@ Rectangle {
     // ──────────────────────────────────────────
     Item {
         id: clockContainer
-        x: root.getGridX(root.clockGridPos, width, 50 * s)
-        y: root.getGridY(root.clockGridPos, height, 48 * s, 70 * s)
-        width: Math.max(120 * s, clockCard.width * root.clockScale)
-        height: Math.max(48 * s, clockCard.height * root.clockScale)
+
+        readonly property real activeW: {
+            if (root.clockStyle === "Caelestia Split") return styleCaelestiaSplit.implicitWidth
+            if (root.clockStyle === "Classic Minimal") return styleClassicMinimal.implicitWidth
+            if (root.clockStyle === "Two-Tier Stacked") return styleTwoTierStacked.implicitWidth
+            if (root.clockStyle === "Compact Capsule") return styleCompactCapsule.width
+            return 300 * s
+        }
+
+        readonly property real activeH: {
+            if (root.clockStyle === "Caelestia Split") return styleCaelestiaSplit.implicitHeight
+            if (root.clockStyle === "Classic Minimal") return styleClassicMinimal.implicitHeight
+            if (root.clockStyle === "Two-Tier Stacked") return styleTwoTierStacked.implicitHeight
+            if (root.clockStyle === "Compact Capsule") return styleCompactCapsule.height
+            return 80 * s
+        }
+
+        width: Math.max(100 * s, activeW * root.clockScale)
+        height: Math.max(40 * s, activeH * root.clockScale)
+
+        x: root.getGridX(root.clockGridPos, width, 80 * s)
+        y: root.getGridY(root.clockGridPos, height, 60 * s, 100 * s)
         opacity: (!root.isUnlocked) ? root.uiOpacity : 0
         visible: opacity > 0
         z: 5
 
         Behavior on x { NumberAnimation { duration: 450; easing.type: Easing.OutCubic } }
         Behavior on y { NumberAnimation { duration: 450; easing.type: Easing.OutCubic } }
+        Behavior on width { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+        Behavior on height { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
         Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
 
         Timer {
@@ -536,15 +556,15 @@ Rectangle {
         Item {
             id: clockScaler
             anchors.centerIn: parent
-            width: clockCard.width
-            height: clockCard.height
+            width: clockContainer.activeW
+            height: clockContainer.activeH
             scale: root.clockScale
             transformOrigin: Item.Center
 
             // Toggleable Frosted Glass Background Card
             Rectangle {
                 id: clockGlassCard
-                anchors.fill: clockCard
+                anchors.fill: parent
                 anchors.margins: -18 * s
                 radius: 24 * s
                 color: Qt.alpha(root.glassBg, root.clockCardOpacity)
@@ -558,19 +578,12 @@ Rectangle {
                 Behavior on color { ColorAnimation { duration: 250 } }
             }
 
-            // Clock Content (Switchable between 4 styles)
-            Item {
-                id: clockCard
-                width: childrenRect.width
-                height: childrenRect.height
-
-                // Style 1: Caelestia Split (Hours:Minutes | 3-Tier Date)
-                Row {
-                    id: styleCaelestiaSplit
-                    visible: root.clockStyle === "Caelestia Split"
-                    spacing: 16 * s
-                    anchors.top: parent.top
-                    anchors.left: parent.left
+            // Style 1: Caelestia Split (Hours:Minutes | 3-Tier Date)
+            Row {
+                id: styleCaelestiaSplit
+                visible: root.clockStyle === "Caelestia Split"
+                spacing: 16 * s
+                anchors.centerIn: parent
 
                     // Left: Digital Hours:Minutes
                     Row {
@@ -647,13 +660,12 @@ Rectangle {
                     }
                 }
 
-                // Style 2: Classic Minimal (Horizontal Time with Date subtitle below)
-                Column {
-                    id: styleClassicMinimal
-                    visible: root.clockStyle === "Classic Minimal"
-                    spacing: 6 * s
-                    anchors.top: parent.top
-                    anchors.left: parent.left
+            // Style 2: Classic Minimal (Horizontal Time with Date subtitle below)
+            Column {
+                id: styleClassicMinimal
+                visible: root.clockStyle === "Classic Minimal"
+                spacing: 6 * s
+                anchors.centerIn: parent
 
                     Row {
                         spacing: 10 * s
@@ -706,13 +718,12 @@ Rectangle {
                     }
                 }
 
-                // Style 3: Two-Tier Stacked (Hours stacked over Minutes)
-                Row {
-                    id: styleTwoTierStacked
-                    visible: root.clockStyle === "Two-Tier Stacked"
-                    spacing: 16 * s
-                    anchors.top: parent.top
-                    anchors.left: parent.left
+            // Style 3: Two-Tier Stacked (Hours stacked over Minutes)
+            Row {
+                id: styleTwoTierStacked
+                visible: root.clockStyle === "Two-Tier Stacked"
+                spacing: 16 * s
+                anchors.centerIn: parent
 
                     Column {
                         spacing: -10 * s
@@ -777,18 +788,19 @@ Rectangle {
                     }
                 }
 
-                // Style 4: Compact Capsule (Inline pill with time & date)
-                Rectangle {
-                    id: styleCompactCapsule
-                    visible: root.clockStyle === "Compact Capsule"
-                    height: 48 * s
-                    width: capsuleRow.implicitWidth + 36 * s
-                    radius: 24 * s
-                    color: root.glassBg
-                    border.color: root.glassBorder
-                    border.width: 1.5 * s
-                    layer.enabled: true
-                    layer.effect: DropShadow { color: "#50000000"; radius: 12; samples: 12 }
+            // Style 4: Compact Capsule (Inline pill with time & date)
+            Rectangle {
+                id: styleCompactCapsule
+                visible: root.clockStyle === "Compact Capsule"
+                height: 48 * s
+                width: capsuleRow.implicitWidth + 36 * s
+                radius: 24 * s
+                anchors.centerIn: parent
+                color: root.glassBg
+                border.color: root.glassBorder
+                border.width: 1.5 * s
+                layer.enabled: true
+                layer.effect: DropShadow { color: "#50000000"; radius: 12; samples: 12 }
 
                     Row {
                         id: capsuleRow
@@ -823,7 +835,6 @@ Rectangle {
                         }
                     }
                 }
-            }
         }
     }
 
@@ -874,8 +885,8 @@ Rectangle {
     // ──────────────────────────────────────────
     Item {
         id: loginPanelContainer
-        x: root.getGridX(root.loginGridPos, width, 50 * s)
-        y: root.getGridY(root.loginGridPos, height, 48 * s, 70 * s) - (root.isKeyboardOpen ? 120 * s : 0)
+        x: root.getGridX(root.loginGridPos, width, 80 * s)
+        y: root.getGridY(root.loginGridPos, height, 60 * s, 100 * s) - (root.isKeyboardOpen ? 120 * s : 0)
         width: Math.max(280 * s, loginContentInner.width * root.loginScale)
         height: Math.max(90 * s, loginContentInner.height * root.loginScale)
         opacity: root.isUnlocked ? root.uiOpacity : 0
