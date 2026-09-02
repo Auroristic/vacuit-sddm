@@ -1834,9 +1834,11 @@ Rectangle {
                                 width: parent.width
                                 spacing: 4 * s
 
-                                Row {
+                                Item {
                                     width: parent.width
+                                    height: 18 * s
                                     Text {
+                                        anchors.left: parent.left
                                         text: "Clock Scale"
                                         font.family: root.sansFont
                                         font.pixelSize: 12 * s
@@ -1906,11 +1908,12 @@ Rectangle {
                             }
 
                             // 4. Frosted Glass Background Card & Opacity
-                            Row {
+                            Item {
                                 width: parent.width
-                                spacing: 10 * s
+                                height: 32 * s
 
                                 Column {
+                                    anchors.left: parent.left
                                     anchors.verticalCenter: parent.verticalCenter
                                     Text {
                                         text: "Frosted Background Card"
@@ -1962,9 +1965,11 @@ Rectangle {
                                 opacity: root.clockCardEnabled ? 1 : 0.4
                                 enabled: root.clockCardEnabled
 
-                                Row {
+                                Item {
                                     width: parent.width
+                                    height: 18 * s
                                     Text {
+                                        anchors.left: parent.left
                                         text: "Card Opacity"
                                         font.family: root.sansFont
                                         font.pixelSize: 11 * s
@@ -2033,11 +2038,12 @@ Rectangle {
                             }
 
                             // 5. Show on Login Toggle
-                            Row {
+                            Item {
                                 width: parent.width
-                                spacing: 10 * s
+                                height: 32 * s
 
                                 Column {
+                                    anchors.left: parent.left
                                     anchors.verticalCenter: parent.verticalCenter
                                     Text {
                                         text: "Keep Clock Visible on Login"
@@ -2158,9 +2164,11 @@ Rectangle {
                                 width: parent.width
                                 spacing: 4 * s
 
-                                Row {
+                                Item {
                                     width: parent.width
+                                    height: 18 * s
                                     Text {
+                                        anchors.left: parent.left
                                         text: "Container Scale"
                                         font.family: root.sansFont
                                         font.pixelSize: 12 * s
@@ -2343,11 +2351,12 @@ Rectangle {
                             }
 
                             // 5. Frosted Glass Background Card
-                            Row {
+                            Item {
                                 width: parent.width
-                                spacing: 10 * s
+                                height: 32 * s
 
                                 Column {
+                                    anchors.left: parent.left
                                     anchors.verticalCenter: parent.verticalCenter
                                     Text {
                                         text: "Frosted Background Card"
@@ -2648,11 +2657,12 @@ Rectangle {
                             }
 
                             // 12-Hour Clock
-                            Row {
+                            Item {
                                 width: parent.width
-                                spacing: 10 * s
+                                height: 32 * s
 
                                 Column {
+                                    anchors.left: parent.left
                                     anchors.verticalCenter: parent.verticalCenter
                                     Text {
                                         text: "12-Hour Clock Format"
@@ -2698,11 +2708,12 @@ Rectangle {
                             }
 
                             // Lava Lamp Blobs
-                            Row {
+                            Item {
                                 width: parent.width
-                                spacing: 10 * s
+                                height: 32 * s
 
                                 Column {
+                                    anchors.left: parent.left
                                     anchors.verticalCenter: parent.verticalCenter
                                     Text {
                                         text: "Ambient Lava Blobs"
