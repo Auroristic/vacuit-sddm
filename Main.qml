@@ -173,6 +173,26 @@ Rectangle {
             return glassBackdrop.mapToItem(root, 0, 0).y;
         }
 
+        readonly property real screenW: {
+            var p = glassBackdrop;
+            var _d = 0;
+            while (p && p !== root) {
+                _d += p.x + p.y + p.width + p.height + p.scale;
+                p = p.parent;
+            }
+            return Math.abs(glassBackdrop.mapToItem(root, glassBackdrop.width, 0).x - glassBackdrop.mapToItem(root, 0, 0).x);
+        }
+
+        readonly property real screenH: {
+            var p = glassBackdrop;
+            var _d = 0;
+            while (p && p !== root) {
+                _d += p.x + p.y + p.width + p.height + p.scale;
+                p = p.parent;
+            }
+            return Math.abs(glassBackdrop.mapToItem(root, 0, glassBackdrop.height).y - glassBackdrop.mapToItem(root, 0, 0).y);
+        }
+
         layer.enabled: root.glassBlurEnabled
         layer.effect: OpacityMask {
             maskSource: Rectangle {
@@ -191,8 +211,8 @@ Rectangle {
             sourceRect: Qt.rect(
                 glassBackdrop.screenX,
                 glassBackdrop.screenY,
-                glassBackdrop.width,
-                glassBackdrop.height
+                glassBackdrop.screenW,
+                glassBackdrop.screenH
             )
         }
 
@@ -1111,11 +1131,14 @@ Rectangle {
 
                     property real pressBloom: 0.0
 
-                    layer.enabled: true
-                    layer.effect: DropShadow {
-                        color: passwordInput.activeFocus ? root.highlightGlow : "#50000000"
-                        radius: passwordInput.activeFocus ? 18 : 10
-                        samples: 16
+                    // Outer shadow handled without conflicting FBO layer
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: parent.radius
+                        color: "transparent"
+                        border.color: passwordInput.activeFocus ? root.highlightGlow : "transparent"
+                        border.width: passwordInput.activeFocus ? 2 * s : 0
+                        Behavior on border.color { ColorAnimation { duration: 200 } }
                     }
 
                     Behavior on x { NumberAnimation { duration: 350; easing.type: Easing.OutCubic } }
