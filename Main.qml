@@ -1560,7 +1560,24 @@ Rectangle {
             clip: true
             z: 50
 
-            property int currentTab: 0
+property int currentTab: 0
+            property bool isTabSwitching: false
+
+            onCurrentTabChanged: {
+                isTabSwitching = true
+                tabSwitchTimer.restart()
+            }
+
+            Timer {
+                id: tabSwitchTimer
+                interval: 340
+                onTriggered: morphingSettingsContainer.isTabSwitching = false
+            }
+
+            Behavior on height {
+                enabled: morphingSettingsContainer.isTabSwitching
+                NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
+            }
 
             state: root.settingsOpen ? "expanded" : "collapsed"
 
@@ -1703,6 +1720,18 @@ Rectangle {
                     border.color: Qt.alpha(root.glassBorder, 0.5)
                     border.width: 1 * s
 
+                    // Smooth Sliding Glowing Indicator
+                    Rectangle {
+                        anchors.bottom: parent.bottom
+                        anchors.bottomMargin: 2 * s
+                        width: 22 * s
+                        height: 2.5 * s
+                        radius: 1.25 * s
+                        color: root.accentColor
+                        x: morphingSettingsContainer.currentTab * (parent.width / 4) + ((parent.width / 4) - width) / 2
+                        Behavior on x { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
+                    }
+
                     Row {
                         anchors.fill: parent
                         Repeater {
@@ -1737,17 +1766,7 @@ Rectangle {
                                     }
                                 }
 
-                                // Glowing underline indicator
-                                Rectangle {
-                                    anchors.bottom: parent.bottom
-                                    anchors.bottomMargin: 2 * s
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    width: 18 * s
-                                    height: 2 * s
-                                    radius: 1 * s
-                                    color: root.accentColor
-                                    visible: morphingSettingsContainer.currentTab === index
-                                }
+
 
                                 MouseArea {
                                     id: tabMa
@@ -1764,13 +1783,29 @@ Rectangle {
                     }
                 }
 
-                // ══════════════════════════════════════════
-                // TAB 0: CLOCK CUSTOMIZATION
-                // ══════════════════════════════════════════
-                Column {
+                // Tab Content Stack Area (Smooth Cross-fade & Height Morph)
+                Item {
+                    id: tabContentArea
                     width: parent.width
-                    spacing: 2 * s
-                    visible: morphingSettingsContainer.currentTab === 0
+                    implicitHeight: {
+                        if (morphingSettingsContainer.currentTab === 0) return tabClockCol.implicitHeight
+                        if (morphingSettingsContainer.currentTab === 1) return tabLoginCol.implicitHeight
+                        if (morphingSettingsContainer.currentTab === 2) return tabAvatarCol.implicitHeight
+                        return tabThemeCol.implicitHeight
+                    }
+
+                    // ══════════════════════════════════════════
+                    // TAB 0: CLOCK CUSTOMIZATION
+                    // ══════════════════════════════════════════
+                    Column {
+                        id: tabClockCol
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        spacing: 2 * s
+                        opacity: morphingSettingsContainer.currentTab === 0 ? 1 : 0
+                        visible: opacity > 0
+                        Behavior on opacity { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
 
                     // Row 0.1: Clock Style
                     Rectangle {
@@ -2257,13 +2292,18 @@ Rectangle {
                     }
                 }
 
-                // ══════════════════════════════════════════
-                // TAB 1: LOGIN & BOX CUSTOMIZATION
-                // ══════════════════════════════════════════
-                Column {
-                    width: parent.width
-                    spacing: 2 * s
-                    visible: morphingSettingsContainer.currentTab === 1
+                    // ══════════════════════════════════════════
+                    // TAB 1: LOGIN & BOX CUSTOMIZATION
+                    // ══════════════════════════════════════════
+                    Column {
+                        id: tabLoginCol
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        spacing: 2 * s
+                        opacity: morphingSettingsContainer.currentTab === 1 ? 1 : 0
+                        visible: opacity > 0
+                        Behavior on opacity { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
 
                     // Row 1.1: Password Box Style
                     Rectangle {
@@ -2917,13 +2957,18 @@ Rectangle {
                     }
                 }
 
-                // ══════════════════════════════════════════
-                // TAB 2: AVATAR CUSTOMIZATION
-                // ══════════════════════════════════════════
-                Column {
-                    width: parent.width
-                    spacing: 2 * s
-                    visible: morphingSettingsContainer.currentTab === 2
+                    // ══════════════════════════════════════════
+                    // TAB 2: AVATAR CUSTOMIZATION
+                    // ══════════════════════════════════════════
+                    Column {
+                        id: tabAvatarCol
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        spacing: 2 * s
+                        opacity: morphingSettingsContainer.currentTab === 2 ? 1 : 0
+                        visible: opacity > 0
+                        Behavior on opacity { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
 
                     // Row 2.1: Avatar Shape (11 M3 Shapes with Triangle!)
                     Rectangle {
@@ -3195,13 +3240,18 @@ Rectangle {
                     }
                 }
 
-                // ══════════════════════════════════════════
-                // TAB 3: THEMES & DISPLAY CUSTOMIZATION
-                // ══════════════════════════════════════════
-                Column {
-                    width: parent.width
-                    spacing: 2 * s
-                    visible: morphingSettingsContainer.currentTab === 3
+                    // ══════════════════════════════════════════
+                    // TAB 3: THEMES & DISPLAY CUSTOMIZATION
+                    // ══════════════════════════════════════════
+                    Column {
+                        id: tabThemeCol
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        spacing: 2 * s
+                        opacity: morphingSettingsContainer.currentTab === 3 ? 1 : 0
+                        visible: opacity > 0
+                        Behavior on opacity { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
 
                     // Row 3.1: Color Palette
                     Rectangle {
@@ -3531,6 +3581,7 @@ Rectangle {
                         }
                     }
                 }
+                } // end tabContentArea
             }
         }
 
