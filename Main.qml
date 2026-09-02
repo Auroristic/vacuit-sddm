@@ -3097,22 +3097,39 @@ Rectangle {
                                 }
 
                                 Image {
+                                    id: avatarPreviewFaceImg
                                     anchors.fill: parent
                                     anchors.margins: 2 * s
-                                    source: (root.activeUser.icon && root.activeUser.icon !== "") ? root.activeUser.icon : "file:///home/retro/.face"
+                                    source: (root.activeUser.icon && root.activeUser.icon !== "") ? root.activeUser.icon : "file:///home/" + root.activeUser.name + "/.face"
                                     fillMode: Image.PreserveAspectCrop
-                                    layer.enabled: true
-                                    layer.effect: MultiEffect {
-                                        maskEnabled: true
-                                        maskSource: ShaderEffectSource {
-                                            sourceItem: MaterialShape {
-                                                width: 40 * s
-                                                height: 40 * s
-                                                shape: root.currentM3Shape
-                                                color: "white"
-                                            }
-                                        }
-                                    }
+                                    visible: false
+                                }
+
+                                MaterialShape {
+                                    id: previewFaceMask
+                                    anchors.fill: parent
+                                    anchors.margins: 2 * s
+                                    shape: root.currentM3Shape
+                                    animationDuration: 350
+                                    color: "#ffffff"
+                                    visible: false
+                                }
+
+                                OpacityMask {
+                                    anchors.fill: parent
+                                    anchors.margins: 2 * s
+                                    source: avatarPreviewFaceImg
+                                    maskSource: previewFaceMask
+                                    visible: avatarPreviewFaceImg.status === Image.Ready
+                                }
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: ""
+                                    font.family: root.monoFont
+                                    font.pixelSize: 22 * s
+                                    color: "#ffffff"
+                                    visible: avatarPreviewFaceImg.status !== Image.Ready
                                 }
                             }
 
