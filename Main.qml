@@ -137,6 +137,7 @@ Rectangle {
     property int loginGridPos: 5 // Default: 5 (Middle Right)
     property real loginScale: 1.0 // 0.7 to 1.6
     property real avatarScale: 1.0 // 0.6 to 1.4
+    property bool glassBlurEnabled: true
     property int glassBlurRadius: 48 // 16 to 80
 
     // ──────────────────────────────────────────
@@ -152,7 +153,7 @@ Rectangle {
         property color borderColor: root.glassBorder
         property real borderWidth: 1.2 * s
 
-        layer.enabled: true
+        layer.enabled: root.glassBlurEnabled
         layer.effect: OpacityMask {
             maskSource: Rectangle {
                 width: glassBackdrop.width
@@ -164,6 +165,7 @@ Rectangle {
         ShaderEffectSource {
             anchors.fill: parent
             sourceItem: fullGlassBlur
+            visible: root.glassBlurEnabled
             live: true
             recursive: false
             sourceRect: Qt.rect(
@@ -631,24 +633,17 @@ Rectangle {
             transformOrigin: Item.Center
 
             // Toggleable Frosted Glass Background Card
-            Rectangle {
+            FrostedGlassCard {
                 id: clockGlassCard
                 anchors.fill: parent
                 anchors.margins: -18 * s
                 radius: 24 * s
-                color: "transparent"
+                tintColor: Qt.alpha(root.glassBg, root.clockCardOpacity)
+                borderColor: Qt.alpha(root.glassBorder, 0.40)
+                borderWidth: 1.5 * s
                 visible: root.clockCardEnabled
                 opacity: root.clockCardEnabled ? 1 : 0
-                layer.enabled: root.clockCardEnabled
-                layer.effect: DropShadow { color: "#40000000"; radius: 18; samples: 16 }
                 Behavior on opacity { NumberAnimation { duration: 300 } }
-
-                FrostedGlassCard {
-                    radius: parent.radius
-                    tintColor: Qt.alpha(root.glassBg, root.clockCardOpacity)
-                    borderColor: Qt.alpha(root.glassBorder, 0.40)
-                    borderWidth: 1.5 * s
-                }
             }
 
             // Style 1: Caelestia Split (Hours:Minutes | 3-Tier Date)
@@ -984,24 +979,17 @@ Rectangle {
             transformOrigin: Item.Center
 
             // Toggleable Frosted Glass Background Card
-            Rectangle {
+            FrostedGlassCard {
                 id: loginGlassCard
                 anchors.fill: loginContentInner
                 anchors.margins: -18 * s
                 radius: 24 * s
-                color: "transparent"
+                tintColor: Qt.alpha(root.glassBg, root.loginCardOpacity)
+                borderColor: Qt.alpha(root.glassBorder, 0.40)
+                borderWidth: 1.5 * s
                 visible: root.loginCardEnabled
                 opacity: root.loginCardEnabled ? 1 : 0
-                layer.enabled: root.loginCardEnabled
-                layer.effect: DropShadow { color: "#40000000"; radius: 18; samples: 16 }
                 Behavior on opacity { NumberAnimation { duration: 300 } }
-
-                FrostedGlassCard {
-                    radius: parent.radius
-                    tintColor: Qt.alpha(root.glassBg, root.loginCardOpacity)
-                    borderColor: Qt.alpha(root.glassBorder, 0.40)
-                    borderWidth: 1.5 * s
-                }
             }
 
             Item {
@@ -3735,10 +3723,7 @@ property int currentTab: 0
                     Rectangle {
                         width: parent.width
                         height: 48 * s
-                        topLeftRadius: 4 * s
-                        topRightRadius: 4 * s
-                        bottomLeftRadius: 14 * s
-                        bottomRightRadius: 14 * s
+                        radius: 8 * s
                         color: lavaRowMa.containsMouse ? Qt.alpha(root.accentColor, 0.20) : Qt.alpha(root.accentColor, 0.08)
                         Behavior on color { ColorAnimation { duration: 200 } }
 
@@ -3801,6 +3786,162 @@ property int currentTab: 0
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: root.showLavaBlobs = !root.showLavaBlobs
+                        }
+                    }
+
+                    // Row 3.4: Frosted Glass Blur Toggle
+                    Rectangle {
+                        id: rowGlassBlurToggle
+                        width: parent.width
+                        height: 48 * s
+                        radius: 8 * s
+                        color: blurToggleMa.containsMouse ? Qt.alpha(root.accentColor, 0.20) : Qt.alpha(root.accentColor, 0.08)
+                        Behavior on color { ColorAnimation { duration: 200 } }
+
+                        Column {
+                            anchors.left: parent.left
+                            anchors.leftMargin: 14 * s
+                            anchors.right: switchGlassBlur.left
+                            anchors.rightMargin: 8 * s
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: 2 * s
+
+                            Text {
+                                text: "Frosted backdrop blur"
+                                font.family: root.sansFont
+                                font.pixelSize: 13 * s
+                                font.weight: Font.Medium
+                                color: root.textPrimary
+                            }
+                            Text {
+                                text: "Real-time blur on cards & menus"
+                                font.family: root.sansFont
+                                font.pixelSize: 10 * s
+                                color: root.textMuted
+                            }
+                        }
+
+                        Rectangle {
+                            id: switchGlassBlur
+                            anchors.right: parent.right
+                            anchors.rightMargin: 14 * s
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 42 * s
+                            height: 24 * s
+                            radius: 12 * s
+                            color: root.glassBlurEnabled ? root.accentColor : Qt.rgba(1, 1, 1, 0.15)
+                            Behavior on color { ColorAnimation { duration: 200 } }
+
+                            Rectangle {
+                                width: 18 * s
+                                height: 18 * s
+                                radius: 9 * s
+                                anchors.verticalCenter: parent.verticalCenter
+                                x: root.glassBlurEnabled ? parent.width - width - 3 * s : 3 * s
+                                color: "#ffffff"
+                                Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: root.glassBlurEnabled ? "󰄬" : "󰅖"
+                                    font.family: root.monoFont
+                                    font.pixelSize: 10 * s
+                                    color: root.glassBlurEnabled ? root.accentColor : root.textMuted
+                                }
+                            }
+                        }
+
+                        MouseArea {
+                            id: blurToggleMa
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.glassBlurEnabled = !root.glassBlurEnabled
+                        }
+                    }
+
+                    // Row 3.5: Blur Radius Slider
+                    Rectangle {
+                        id: rowGlassBlurSlider
+                        width: parent.width
+                        height: 58 * s
+                        radius: 8 * s
+                        color: Qt.alpha(root.accentColor, 0.08)
+                        visible: root.glassBlurEnabled
+
+                        Column {
+                            anchors.fill: parent
+                            anchors.margins: 10 * s
+                            spacing: 8 * s
+
+                            Item {
+                                width: parent.width
+                                height: 16 * s
+
+                                Text {
+                                    text: "Blur intensity"
+                                    font.family: root.sansFont
+                                    font.pixelSize: 12 * s
+                                    font.weight: Font.DemiBold
+                                    color: root.textPrimary
+                                    anchors.left: parent.left
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+
+                                Text {
+                                    text: root.glassBlurRadius + "px"
+                                    font.family: root.monoFont
+                                    font.pixelSize: 11 * s
+                                    color: root.accentColor
+                                    anchors.right: parent.right
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                            }
+
+                            Item {
+                                width: parent.width
+                                height: 12 * s
+
+                                Rectangle {
+                                    id: blurTrack
+                                    anchors.fill: parent
+                                    height: 4 * s
+                                    radius: 2 * s
+                                    color: Qt.rgba(1, 1, 1, 0.12)
+                                    anchors.verticalCenter: parent.verticalCenter
+
+                                    Rectangle {
+                                        height: parent.height
+                                        width: Math.max(0, Math.min(parent.width, ((root.glassBlurRadius - 16) / 64) * parent.width))
+                                        radius: 2 * s
+                                        color: root.accentColor
+                                    }
+                                }
+
+                                Rectangle {
+                                    width: 12 * s
+                                    height: 12 * s
+                                    radius: 6 * s
+                                    color: "#ffffff"
+                                    anchors.verticalCenter: blurTrack.verticalCenter
+                                    x: Math.max(0, Math.min(blurTrack.width - width, ((root.glassBlurRadius - 16) / 64) * (blurTrack.width - width)))
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onPressed: function(mouse) {
+                                        var r = Math.max(0, Math.min(1, mouse.x / width))
+                                        root.glassBlurRadius = Math.round(16 + r * 64)
+                                    }
+                                    onPositionChanged: function(mouse) {
+                                        if (pressed) {
+                                            var r = Math.max(0, Math.min(1, mouse.x / width))
+                                            root.glassBlurRadius = Math.round(16 + r * 64)
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
