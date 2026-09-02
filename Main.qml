@@ -513,54 +513,115 @@ Rectangle {
             Behavior on opacity { NumberAnimation { duration: 600; easing.type: Easing.OutCubic } }
         }
 
-    // Ambient floating lava lamp geometric shapes (Triangles, Cookies, Diamonds, etc.)
+    // Ambient floating M3 geometric background shapes (Lissajous organic float field)
     Item {
         id: ambientShapesContainer
         anchors.fill: parent
         visible: root.showLavaBlobs
-        opacity: root.isUnlocked ? 0.75 : 0.45
+        opacity: root.isUnlocked ? 0.72 : 0.42
         Behavior on opacity { NumberAnimation { duration: 650; easing.type: Easing.OutCubic } }
 
         Repeater {
-            model: 7
+            model: [
+                { shape: MaterialShape.Triangle,     xRatio: 0.12, yRatio: 0.18, dx: 110, dy: 130, sz: 170, alpha: 0.32, rotT: 28000, xT: 13000, yT: 17000 },
+                { shape: MaterialShape.Cookie9Sided, xRatio: 0.78, yRatio: 0.14, dx: -130, dy: 110, sz: 230, alpha: 0.22, rotT: 34000, xT: 19000, yT: 14000 },
+                { shape: MaterialShape.Diamond,      xRatio: 0.48, yRatio: 0.72, dx: 120, dy: -100, sz: 140, alpha: 0.30, rotT: 24000, xT: 15000, yT: 21000 },
+                { shape: MaterialShape.Sunny,        xRatio: 0.86, yRatio: 0.78, dx: -100, dy: -120, sz: 200, alpha: 0.24, rotT: 32000, xT: 17000, yT: 13000 },
+                { shape: MaterialShape.Cookie4Sided, xRatio: 0.08, yRatio: 0.76, dx: 100, dy: -90, sz: 160, alpha: 0.28, rotT: 26000, xT: 16000, yT: 20000 },
+                { shape: MaterialShape.Flower,       xRatio: 0.32, yRatio: 0.28, dx: -90, dy: 110, sz: 130, alpha: 0.26, rotT: 30000, xT: 14000, yT: 18000 },
+                { shape: MaterialShape.ClamShell,    xRatio: 0.64, yRatio: 0.38, dx: 100, dy: 90, sz: 150, alpha: 0.26, rotT: 29000, xT: 18000, yT: 15000 },
+                { shape: MaterialShape.Ghostish,     xRatio: 0.22, yRatio: 0.88, dx: 80, dy: -80, sz: 110, alpha: 0.30, rotT: 22000, xT: 12000, yT: 16000 },
+                { shape: MaterialShape.VerySunny,    xRatio: 0.92, yRatio: 0.44, dx: -110, dy: 100, sz: 180, alpha: 0.24, rotT: 36000, xT: 20000, yT: 15000 },
+                { shape: MaterialShape.Heart,        xRatio: 0.40, yRatio: 0.85, dx: 90, dy: -90, sz: 120, alpha: 0.28, rotT: 25000, xT: 15000, yT: 19000 }
+            ]
+
             delegate: Item {
                 id: shapeWrapper
-                property real initialX: (index * 260 + 70) * s
-                property real initialY: ((index * 190) % 650 + 60) * s
-                property real targetX: initialX + (index % 2 === 0 ? 90 * s : -90 * s)
-                property real targetY: initialY + (index % 2 === 0 ? 110 * s : -100 * s)
-                x: initialX
-                y: initialY
-                width: (110 + (index % 4) * 40) * s
-                height: width
+                readonly property real basePosX: modelData.xRatio * root.width
+                readonly property real basePosY: modelData.yRatio * root.height
+                readonly property real shapeSize: modelData.sz * s
+
+                x: basePosX - shapeSize / 2
+                y: basePosY - shapeSize / 2
+                width: shapeSize
+                height: shapeSize
+
+                transformOrigin: Item.Center
 
                 MaterialShape {
                     anchors.fill: parent
-                    shape: [
-                        MaterialShape.Triangle,
-                        MaterialShape.Cookie9Sided,
-                        MaterialShape.Diamond,
-                        MaterialShape.Sunny,
-                        MaterialShape.Triangle,
-                        MaterialShape.Cookie4Sided,
-                        MaterialShape.ClamShell
-                    ][index % 7]
-                    color: Qt.alpha(root.accentColor, 0.35)
-                    animationDuration: 800
+                    shape: modelData.shape
+                    color: Qt.alpha(root.accentColor, modelData.alpha)
+                    animationDuration: 1200
+                }
+
+                // Smooth organic Lissajous Drift: Independent X and Y loops
+                SequentialAnimation {
+                    loops: Animation.Infinite
+                    running: root.showLavaBlobs
+                    NumberAnimation {
+                        target: shapeWrapper
+                        property: "x"
+                        to: shapeWrapper.basePosX - shapeWrapper.shapeSize / 2 + modelData.dx * s
+                        duration: modelData.xT
+                        easing.type: Easing.InOutSine
+                    }
+                    NumberAnimation {
+                        target: shapeWrapper
+                        property: "x"
+                        to: shapeWrapper.basePosX - shapeWrapper.shapeSize / 2
+                        duration: modelData.xT
+                        easing.type: Easing.InOutSine
+                    }
                 }
 
                 SequentialAnimation {
                     loops: Animation.Infinite
                     running: root.showLavaBlobs
-                    ParallelAnimation {
-                        NumberAnimation { target: shapeWrapper; property: "x"; to: shapeWrapper.targetX; duration: 7500 + index * 1000; easing.type: Easing.InOutSine }
-                        NumberAnimation { target: shapeWrapper; property: "y"; to: shapeWrapper.targetY; duration: 6500 + index * 900; easing.type: Easing.InOutSine }
-                        NumberAnimation { target: shapeWrapper; property: "rotation"; to: 180; duration: 14000 + index * 2000; easing.type: Easing.InOutSine }
+                    NumberAnimation {
+                        target: shapeWrapper
+                        property: "y"
+                        to: shapeWrapper.basePosY - shapeWrapper.shapeSize / 2 + modelData.dy * s
+                        duration: modelData.yT
+                        easing.type: Easing.InOutSine
                     }
-                    ParallelAnimation {
-                        NumberAnimation { target: shapeWrapper; property: "x"; to: shapeWrapper.initialX; duration: 7500 + index * 1000; easing.type: Easing.InOutSine }
-                        NumberAnimation { target: shapeWrapper; property: "y"; to: shapeWrapper.initialY; duration: 6500 + index * 900; easing.type: Easing.InOutSine }
-                        NumberAnimation { target: shapeWrapper; property: "rotation"; to: 0; duration: 14000 + index * 2000; easing.type: Easing.InOutSine }
+                    NumberAnimation {
+                        target: shapeWrapper
+                        property: "y"
+                        to: shapeWrapper.basePosY - shapeWrapper.shapeSize / 2
+                        duration: modelData.yT
+                        easing.type: Easing.InOutSine
+                    }
+                }
+
+                // Continuous slow rotation
+                NumberAnimation {
+                    target: shapeWrapper
+                    property: "rotation"
+                    from: 0
+                    to: 360
+                    duration: modelData.rotT
+                    loops: Animation.Infinite
+                    running: root.showLavaBlobs
+                }
+
+                // Subtle organic scale breathing
+                SequentialAnimation {
+                    loops: Animation.Infinite
+                    running: root.showLavaBlobs
+                    NumberAnimation {
+                        target: shapeWrapper
+                        property: "scale"
+                        to: 1.08
+                        duration: modelData.xT * 0.75
+                        easing.type: Easing.InOutSine
+                    }
+                    NumberAnimation {
+                        target: shapeWrapper
+                        property: "scale"
+                        to: 0.94
+                        duration: modelData.xT * 0.75
+                        easing.type: Easing.InOutSine
                     }
                 }
             }
@@ -3994,14 +4055,14 @@ property int currentTab: 0
                             spacing: 2 * s
 
                             Text {
-                                text: "Lava lamp background"
+                                text: "M3 backgrounds"
                                 font.family: root.sansFont
                                 font.pixelSize: 13 * s
                                 font.weight: Font.Medium
                                 color: root.textPrimary
                             }
                             Text {
-                                text: "Animate blobs on idle screen"
+                                text: "Floating Material You geometric shapes"
                                 font.family: root.sansFont
                                 font.pixelSize: 10 * s
                                 color: root.textMuted
