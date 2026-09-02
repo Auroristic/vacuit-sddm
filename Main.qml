@@ -239,26 +239,69 @@ Rectangle {
     }
 
     // ──────────────────────────────────────────
-    // Mock / Real Models for Users & Sessions (Allows testing dropdown menus!)
+    // Real SDDM Models for Users & Sessions (Zero Mock Data!)
     // ──────────────────────────────────────────
-    property var mockUserList: [
-        { name: "retro", realName: "retro", icon: "file:///home/retro/.face" },
-        { name: "astra", realName: "Astra", icon: "" },
-        { name: "lumine", realName: "Lumine", icon: "" },
-        { name: "guest", realName: "Guest Account", icon: "" }
-    ]
-    property int currentUserIdx: 0
-    readonly property var activeUser: mockUserList[currentUserIdx]
+    property int currentUserIdx: (typeof userModel !== "undefined" && userModel.lastIndex >= 0) ? userModel.lastIndex : 0
+    readonly property var activeUser: {
+        if (userHelper.currentItem && userHelper.currentItem.uLogin !== "") {
+            return {
+                name: userHelper.currentItem.uLogin,
+                realName: userHelper.currentItem.uName,
+                icon: userHelper.currentItem.uIcon
+            }
+        }
+        return { name: "retro", realName: "retro", icon: "file:///home/retro/.face" }
+    }
 
-    property var mockSessionList: [
-        { name: "Hyprland (Wayland)", icon: "󰣇" },
-        { name: "Hyprland (UWSM)",    icon: "󰣇" },
-        { name: "Plasma 6 (Wayland)", icon: "" },
-        { name: "GNOME (Wayland)",    icon: "" },
-        { name: "Sway (Wayland)",     icon: "󰍹" }
-    ]
-    property int currentSessionIdx: 0
-    readonly property var activeSession: mockSessionList[currentSessionIdx]
+    ListView {
+        id: userHelper
+        model: typeof userModel !== "undefined" ? userModel : null
+        currentIndex: root.currentUserIdx
+        opacity: 0
+        width: 1
+        height: 1
+        z: -100
+        delegate: Item {
+            property string uLogin: (typeof model !== "undefined" && model.name) ? model.name : "retro"
+            property string uName: (typeof model !== "undefined" && (model.realName || model.name)) ? (model.realName || model.name) : "retro"
+            property string uIcon: (typeof model !== "undefined" && model.icon) ? model.icon : ("file:///home/" + uLogin + "/.face")
+        }
+    }
+
+    property int currentSessionIdx: (typeof sessionModel !== "undefined" && sessionModel.lastIndex >= 0) ? sessionModel.lastIndex : 0
+    readonly property var activeSession: {
+        var sName = (sessionHelper.currentItem && sessionHelper.currentItem.sName) ? sessionHelper.currentItem.sName : "Hyprland"
+        return {
+            name: sName,
+            icon: getSessionIcon(sName)
+        }
+    }
+
+    function getSessionIcon(sName) {
+        if (!sName) return "󰣇"
+        var lower = sName.toLowerCase()
+        if (lower.indexOf("hyprland") !== -1) return "󰣇"
+        if (lower.indexOf("plasma") !== -1 || lower.indexOf("kde") !== -1) return ""
+        if (lower.indexOf("gnome") !== -1) return ""
+        if (lower.indexOf("sway") !== -1) return "󰍹"
+        if (lower.indexOf("wayfire") !== -1) return "󰕰"
+        if (lower.indexOf("niri") !== -1) return "󱂬"
+        if (lower.indexOf("river") !== -1) return "󰐊"
+        return "󰣇"
+    }
+
+    ListView {
+        id: sessionHelper
+        model: typeof sessionModel !== "undefined" ? sessionModel : null
+        currentIndex: root.currentSessionIdx
+        opacity: 0
+        width: 1
+        height: 1
+        z: -100
+        delegate: Item {
+            property string sName: (typeof model !== "undefined" && model.name) ? model.name : "Hyprland"
+        }
+    }
 
     // ──────────────────────────────────────────
     // Dynamic Themed Colors & Themed Glass Materials
@@ -1699,7 +1742,7 @@ Rectangle {
         anchors.topMargin: root.userListOpen ? 12 * s : 4 * s
         anchors.bottomMargin: root.userListOpen ? 12 * s : 4 * s
         width: 260 * s
-        height: 46 * s + root.mockUserList.length * 44 * s
+        height: 46 * s + Math.max(1, (typeof userModel !== "undefined" ? userModel.rowCount() : 1)) * 44 * s
         radius: 18 * s
         color: "transparent"
         visible: opacity > 0
@@ -1762,10 +1805,13 @@ Rectangle {
                 }
             }
 
-            // User List Repeater
+            // Real SDDM User List Repeater (Zero Mock Accounts!)
             Repeater {
-                model: root.mockUserList
+                id: userListRepeater
+                model: typeof userModel !== "undefined" ? userModel : 1
                 delegate: Rectangle {
+                    property string itemLogin: (typeof model !== "undefined" && model.name) ? model.name : "retro"
+                    property string itemRealName: (typeof model !== "undefined" && (model.realName || model.name)) ? (model.realName || model.name) : "retro"
                     width: parent.width
                     height: 38 * s
                     radius: 10 * s
@@ -1788,7 +1834,7 @@ Rectangle {
                         }
 
                         Text {
-                            text: modelData.realName
+                            text: itemRealName
                             font.family: root.sansFont
                             font.pixelSize: 12 * s
                             font.weight: Font.Medium
@@ -4295,7 +4341,7 @@ property int currentTab: 0
             anchors.leftMargin: 10 * s
             anchors.bottom: parent.bottom
             width: root.sessionMenuOpen ? 240 * s : (sessionRow.implicitWidth + 24 * s)
-            height: root.sessionMenuOpen ? (48 * s + root.mockSessionList.length * 40 * s) : 38 * s
+            height: root.sessionMenuOpen ? (48 * s + Math.max(1, (typeof sessionModel !== "undefined" ? sessionModel.rowCount() : 1)) * 40 * s) : 38 * s
             radius: root.sessionMenuOpen ? 18 * s : 12 * s
             color: "transparent"
 
@@ -4410,10 +4456,11 @@ property int currentTab: 0
                     }
                 }
 
-                // Session Items
+                // Real SDDM Session Items (Zero Mock Desktops!)
                 Repeater {
-                    model: root.mockSessionList
+                    model: typeof sessionModel !== "undefined" ? sessionModel : 1
                     delegate: Rectangle {
+                        property string sessName: (typeof model !== "undefined" && model.name) ? model.name : "Hyprland"
                         width: parent.width
                         height: 36 * s
                         radius: 8 * s
@@ -4428,7 +4475,7 @@ property int currentTab: 0
                             spacing: 8 * s
 
                             Text {
-                                text: modelData.icon
+                                text: getSessionIcon(sessName)
                                 font.family: root.monoFont
                                 font.pixelSize: 14 * s
                                 color: root.currentSessionIdx === index ? root.accentColor : root.textSecondary
@@ -4436,7 +4483,7 @@ property int currentTab: 0
                             }
 
                             Text {
-                                text: modelData.name
+                                text: sessName
                                 font.family: root.sansFont
                                 font.pixelSize: 12 * s
                                 font.weight: Font.Medium
