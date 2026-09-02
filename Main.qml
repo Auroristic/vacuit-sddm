@@ -1562,12 +1562,45 @@ Rectangle {
 
             property int currentTab: 0
 
+            state: root.settingsOpen ? "expanded" : "collapsed"
+
+            states: [
+                State {
+                    name: "collapsed"
+                    PropertyChanges {
+                        target: morphingSettingsContainer
+                        width: 38 * s
+                        height: 38 * s
+                        radius: 12 * s
+                    }
+                },
+                State {
+                    name: "expanded"
+                    PropertyChanges {
+                        target: morphingSettingsContainer
+                        width: 370 * s
+                        height: Math.min(root.height - 80 * s, settingsContentCol.implicitHeight + 28 * s)
+                        radius: 20 * s
+                    }
+                }
+            ]
+
+            transitions: [
+                Transition {
+                    from: "collapsed"; to: "expanded"
+                    NumberAnimation { properties: "width,height"; duration: 420; easing.type: Easing.OutCubic }
+                    NumberAnimation { properties: "radius"; duration: 300; easing.type: Easing.OutCubic }
+                },
+                Transition {
+                    from: "expanded"; to: "collapsed"
+                    NumberAnimation { properties: "width,height"; duration: 380; easing.type: Easing.OutCubic }
+                    NumberAnimation { properties: "radius"; duration: 250; easing.type: Easing.OutCubic }
+                }
+            ]
+
             layer.enabled: true
             layer.effect: DropShadow { color: "#50000000"; radius: root.settingsOpen ? 22 : 16; samples: 16 }
 
-            Behavior on width { NumberAnimation { duration: 420; easing.type: Easing.OutCubic } }
-            Behavior on height { NumberAnimation { duration: 420; easing.type: Easing.OutCubic } }
-            Behavior on radius { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
             Behavior on color { ColorAnimation { duration: 250 } }
             Behavior on border.color { ColorAnimation { duration: 250 } }
 
