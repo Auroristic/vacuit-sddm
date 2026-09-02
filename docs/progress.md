@@ -127,46 +127,49 @@ Build a production-grade, bug-free, high-performance SDDM Qt6 theme based on Cae
 ## Current Work & Planned Tasks
 
 ### Task 1: Add Triangle M3 Shape
-- Add `MaterialShape.Triangle` to the avatar shape selection list in the Settings Hub.
-- Add `MaterialShape.Triangle` to the password dots shape array.
+- Add `MaterialShape.Triangle` to the avatar shape selection list in the Settings Hub. (Completed and verified)
+- Add `MaterialShape.Triangle` to the password dots shape array. (Completed and verified)
 
-### Task 2: Clock Customization System
-- Implement 4 Clock Styles:
+### Task 2: Clock Customization System (Completed and Verified)
+- Implement 4 Clock Styles: (Completed)
   1. Caelestia Split: Hours:Minutes | vertical divider | 3-tier stacked date (Month, Day, Weekday).
   2. Classic Minimal: Horizontal time with date subtitle below.
   3. Two-Tier Stacked: Giant Hours over Minutes with date pill.
   4. Compact Capsule: Inline time and date in a glass pill.
-- Implement 9-Grid Screen Positioning:
+- Implement 9-Grid Screen Positioning: (Completed)
   - Positions: `Top Left`, `Top Center`, `Top Right`, `Middle Left`, `Middle Center`, `Middle Right`, `Bottom Left`, `Bottom Center`, `Bottom Right`.
   - Transitions: `Behavior on x` and `Behavior on y` with `Easing.OutCubic` (450ms) for smooth kinetic glide.
-- Implement Scale Slider (0.6x to 2.2x).
-- Implement Toggleable Frosted Glass Background Card with opacity control (15% to 85%).
-- Ensure clock remains optionally visible in the unlocked/login state.
+- Implement Scale Slider (0.6x to 2.2x). (Completed)
+- Implement Toggleable Frosted Glass Background Card with opacity control (15% to 85%). (Completed)
+- Ensure clock remains optionally visible in the unlocked/login state. (Completed)
 
-### Task 3: Login Container Customization System
-- Implement 9-Grid Screen Positioning for Login & Avatar Container with kinetic glide.
-- Implement Container Scale Slider (0.7x to 1.6x).
-- Implement Toggleable Frosted Glass Background Card with opacity control.
-- Implement Avatar Relative Orientation:
+### Task 3: Login Container Customization System (Completed and Verified)
+- Implement 9-Grid Screen Positioning for Login & Avatar Container with kinetic glide. (Completed)
+- Implement Container Scale Slider (0.7x to 1.6x). (Completed)
+- Implement Toggleable Frosted Glass Background Card with opacity control. (Completed)
+- Implement Avatar Relative Orientation: (Completed)
   - `Right`: Avatar to the right of password box.
   - `Left`: Avatar to the left of password box.
   - `Top Center`: Avatar centered above password box.
   - `Top Left`: Avatar on top-left shoulder of password box.
   - `Top Right`: Avatar on top-right shoulder of password box.
-- Implement 4 Password Box Styles:
+- Implement 4 Password Box Styles: (Completed)
   1. Glass Pill: Full 360-degree rounded pill.
   2. Minimal Underline: Transparent background with glowing bottom border line.
   3. Split Badge: Lock icon in an attached circular glass badge.
   4. Sharp M3 Card: Chamfered rectangular Material 3 card geometry.
 
-### Task 4: Button-to-Menu Morphing Animations
-- Morph Session Pill: Expand bottom-left session pill geometry upwards into the session menu card on click, with staggered item fade-in.
-- Morph Avatar Frame: Expand avatar frame directly into the user switcher list modal.
+### Task 4: Button-to-Menu Morphing Animations (Completed and Verified)
+- Morph Session Pill: Expand bottom-left session pill geometry upwards into the session menu card on click, with staggered item fade-in. (Completed)
+- Morph Avatar Frame: Expand avatar frame smoothly into user switcher list modal. (Completed)
 
-### Task 5: Caelestia Glass Settings Hub UI
-- Redesign the Settings modal into organized glass tabs:
-  - Tab 1: Clock (Style, 9-Grid Position, Scale Slider, Background Card Toggle & Opacity).
+### Task 5: Caelestia Glass Settings Hub UI (Completed and Verified)
+- Redesign the Settings modal into organized glass tabs: (Completed)
+  - Tab 1: Clock (Style, 9-Grid Position, Scale Slider, Background Card Toggle & Opacity, Show on Login).
   - Tab 2: Login & Box (9-Grid Position, Scale Slider, Avatar Orientation, Box Style, Background Card Toggle).
-  - Tab 3: Avatar (Shape Selector with Triangle, Border Glow, Size).
-  - Tab 4: Themes & Palette (Preset Color Schemes, Wallpaper Browser).
+  - Tab 3: Avatar (Shape Selector with 11 M3 shapes including Triangle, Live Shape Preview).
+  - Tab 4: Themes & Palette (Preset Color Schemes, 12h/24h toggle, Ambient Lava Blobs toggle).
+- Verified with qmllint: 0 errors, 0 warnings.
+- Verified live with sddm-greeter-qt6 in test mode.
+- Synchronized with /home/retro/qylock/themes/blewh-glass/Main.qml.
 
