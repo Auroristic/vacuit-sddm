@@ -1372,6 +1372,7 @@ Rectangle {
                             font.pixelSize: 14 * s
                             font.letterSpacing: 2 * s
                             cursorVisible: false
+                            cursorDelegate: Item { visible: false }
                             focus: true
 
                             Keys.onPressed: function(event) {
@@ -1447,29 +1448,6 @@ Rectangle {
                                             Behavior on color {
                                                 ColorAnimation { duration: 200 }
                                             }
-                                        }
-                                    }
-                                }
-
-                                // Pulsing Glowing Cursor Dot (Only visible when typing, never overlaps placeholder!)
-                                Item {
-                                    id: cursorPill
-                                    width: 8 * s
-                                    height: 8 * s
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    visible: passwordInput.activeFocus && passwordInput.text.length > 0
-
-                                    Rectangle {
-                                        anchors.fill: parent
-                                        radius: 4 * s
-                                        color: root.accentColor
-                                        opacity: 0.9
-
-                                        SequentialAnimation on opacity {
-                                            loops: Animation.Infinite
-                                            running: passwordInput.activeFocus
-                                            NumberAnimation { from: 0.9; to: 0.2; duration: 550; easing.type: Easing.InOutQuad }
-                                            NumberAnimation { from: 0.2; to: 0.9; duration: 550; easing.type: Easing.InOutQuad }
                                         }
                                     }
                                 }
