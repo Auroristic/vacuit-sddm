@@ -137,6 +137,7 @@ Rectangle {
     property int loginGridPos: 5 // Default: 5 (Middle Right)
     property real loginScale: 1.0 // 0.7 to 1.6
     property real avatarScale: 1.0 // 0.6 to 1.4
+    property int glassBlurRadius: 48 // 16 to 80
     property bool loginCardEnabled: false
     property real loginCardOpacity: 0.40 // 0.15 to 0.85
     property string avatarOrientation: "Right" // "Right", "Left", "Top Center", "Top Left", "Top Right"
@@ -424,9 +425,17 @@ Rectangle {
         id: bgBlur
         anchors.fill: parent
         source: bgImage
-        radius: 48
+        radius: root.glassBlurRadius
         opacity: root.isUnlocked ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: 600; easing.type: Easing.OutCubic } }
+    }
+
+    FastBlur {
+        id: fullGlassBlur
+        anchors.fill: parent
+        source: bgImage
+        radius: root.glassBlurRadius
+        visible: false
     }
 
     // Ambient floating lava lamp geometric shapes (Triangles, Cookies, Diamonds, etc.)
@@ -587,15 +596,19 @@ Rectangle {
                 anchors.fill: parent
                 anchors.margins: -18 * s
                 radius: 24 * s
-                color: Qt.alpha(root.glassBg, root.clockCardOpacity)
-                border.color: Qt.alpha(root.glassBorder, 0.40)
-                border.width: 1.5 * s
+                color: "transparent"
                 visible: root.clockCardEnabled
                 opacity: root.clockCardEnabled ? 1 : 0
                 layer.enabled: root.clockCardEnabled
                 layer.effect: DropShadow { color: "#40000000"; radius: 18; samples: 16 }
                 Behavior on opacity { NumberAnimation { duration: 300 } }
-                Behavior on color { ColorAnimation { duration: 250 } }
+
+                FrostedGlassCard {
+                    radius: parent.radius
+                    tintColor: Qt.alpha(root.glassBg, root.clockCardOpacity)
+                    borderColor: Qt.alpha(root.glassBorder, 0.40)
+                    borderWidth: 1.5 * s
+                }
             }
 
             // Style 1: Caelestia Split (Hours:Minutes | 3-Tier Date)
@@ -816,11 +829,16 @@ Rectangle {
                 width: capsuleRow.implicitWidth + 36 * s
                 radius: 24 * s
                 anchors.centerIn: parent
-                color: root.glassBg
-                border.color: root.glassBorder
-                border.width: 1.5 * s
+                color: "transparent"
                 layer.enabled: true
                 layer.effect: DropShadow { color: "#50000000"; radius: 12; samples: 12 }
+
+                FrostedGlassCard {
+                    radius: parent.radius
+                    tintColor: root.glassBg
+                    borderColor: root.glassBorder
+                    borderWidth: 1.5 * s
+                }
 
                     Row {
                         id: capsuleRow
@@ -931,15 +949,19 @@ Rectangle {
                 anchors.fill: loginContentInner
                 anchors.margins: -18 * s
                 radius: 24 * s
-                color: Qt.alpha(root.glassBg, root.loginCardOpacity)
-                border.color: Qt.alpha(root.glassBorder, 0.40)
-                border.width: 1.5 * s
+                color: "transparent"
                 visible: root.loginCardEnabled
                 opacity: root.loginCardEnabled ? 1 : 0
                 layer.enabled: root.loginCardEnabled
                 layer.effect: DropShadow { color: "#40000000"; radius: 18; samples: 16 }
                 Behavior on opacity { NumberAnimation { duration: 300 } }
-                Behavior on color { ColorAnimation { duration: 250 } }
+
+                FrostedGlassCard {
+                    radius: parent.radius
+                    tintColor: Qt.alpha(root.glassBg, root.loginCardOpacity)
+                    borderColor: Qt.alpha(root.glassBorder, 0.40)
+                    borderWidth: 1.5 * s
+                }
             }
 
             Item {
@@ -1030,9 +1052,14 @@ Rectangle {
                     width: loginContentInner.pwBoxW
                     height: loginContentInner.pwBoxH
                     radius: root.getBoxRadius(height)
-                    color: root.boxStyle === "Minimal Underline" ? Qt.alpha(root.glassBg, 0.30) : (passwordInput.activeFocus ? Qt.alpha(root.accentColor, 0.28) : root.glassBg)
-                    border.color: root.boxStyle === "Minimal Underline" ? "transparent" : (passwordInput.activeFocus ? root.accentColor : root.glassBorder)
-                    border.width: root.boxStyle === "Minimal Underline" ? 0 : 1.5 * s
+                    color: "transparent"
+
+                    FrostedGlassCard {
+                        radius: parent.radius
+                        tintColor: root.boxStyle === "Minimal Underline" ? Qt.alpha(root.glassBg, 0.30) : (passwordInput.activeFocus ? Qt.alpha(root.accentColor, 0.28) : root.glassBg)
+                        borderColor: root.boxStyle === "Minimal Underline" ? "transparent" : (passwordInput.activeFocus ? root.accentColor : root.glassBorder)
+                        borderWidth: root.boxStyle === "Minimal Underline" ? 0 : 1.5 * s
+                    }
 
                     property real pressBloom: 0.0
 
@@ -1472,10 +1499,15 @@ Rectangle {
         width: 260 * s
         height: 46 * s + root.mockUserList.length * 44 * s
         radius: 18 * s
-        color: root.glassBg
-        border.color: root.glassBorder
-        border.width: 1 * s
+        color: "transparent"
         visible: opacity > 0
+
+        FrostedGlassCard {
+            radius: parent.radius
+            tintColor: root.glassBg
+            borderColor: root.glassBorder
+            borderWidth: 1 * s
+        }
         opacity: root.userListOpen ? 1.0 : 0.0
         scale: root.userListOpen ? 1.0 : 0.84
         transformOrigin: (loginPanelContainer.y < 250 * s) ? Item.TopRight : Item.BottomRight
@@ -1619,11 +1651,16 @@ Rectangle {
             width: root.settingsOpen ? 370 * s : 38 * s
             height: root.settingsOpen ? Math.min(root.height - 80 * s, settingsContentCol.implicitHeight + 28 * s) : 38 * s
             radius: root.settingsOpen ? 20 * s : 12 * s
-            color: root.settingsOpen ? root.glassBg : (settingsBtnMa.containsMouse ? Qt.alpha(root.accentColor, 0.28) : root.glassBg)
-            border.color: root.settingsOpen ? root.glassBorder : (settingsBtnMa.containsMouse ? root.accentColor : root.glassBorder)
-            border.width: 1 * s
+            color: "transparent"
             clip: true
             z: 50
+
+            FrostedGlassCard {
+                radius: morphingSettingsContainer.radius
+                tintColor: root.settingsOpen ? root.glassBg : (settingsBtnMa.containsMouse ? Qt.alpha(root.accentColor, 0.35) : root.glassBg)
+                borderColor: root.settingsOpen ? root.glassBorder : (settingsBtnMa.containsMouse ? root.accentColor : root.glassBorder)
+                borderWidth: 1.2 * s
+            }
 
 property int currentTab: 0
             property bool isTabSwitching: false
@@ -3740,9 +3777,14 @@ property int currentTab: 0
             width: root.sessionMenuOpen ? 240 * s : (sessionRow.implicitWidth + 24 * s)
             height: root.sessionMenuOpen ? (48 * s + root.mockSessionList.length * 40 * s) : 38 * s
             radius: root.sessionMenuOpen ? 18 * s : 12 * s
-            color: root.sessionMenuOpen ? root.glassBg : (sessArea.containsMouse ? Qt.alpha(root.accentColor, 0.28) : root.glassBg)
-            border.color: root.sessionMenuOpen ? root.glassBorder : (sessArea.containsMouse ? root.accentColor : root.glassBorder)
-            border.width: 1 * s
+            color: "transparent"
+
+            FrostedGlassCard {
+                radius: morphingSessionContainer.radius
+                tintColor: root.sessionMenuOpen ? root.glassBg : (sessArea.containsMouse ? Qt.alpha(root.accentColor, 0.35) : root.glassBg)
+                borderColor: root.sessionMenuOpen ? root.glassBorder : (sessArea.containsMouse ? root.accentColor : root.glassBorder)
+                borderWidth: 1 * s
+            }
             clip: true
             opacity: root.settingsOpen ? 0 : 1
             visible: opacity > 0
@@ -3922,10 +3964,15 @@ property int currentTab: 0
                 height: 38 * s
                 width: root.powerMenuOpen ? (expandedPowerRow.implicitWidth + 30 * s) : 38 * s
                 radius: 12 * s
-                color: root.powerMenuOpen ? root.glassBg : (powerToggleMa.containsMouse ? Qt.alpha(root.accentColor, 0.28) : root.glassBg)
-                border.color: root.powerMenuOpen ? root.accentColor : (powerToggleMa.containsMouse ? root.accentColor : root.glassBorder)
-                border.width: 1 * s
+                color: "transparent"
                 clip: true
+
+                FrostedGlassCard {
+                    radius: parent.radius
+                    tintColor: root.powerMenuOpen ? root.glassBg : (powerToggleMa.containsMouse ? Qt.alpha(root.accentColor, 0.28) : root.glassBg)
+                    borderColor: root.powerMenuOpen ? root.accentColor : (powerToggleMa.containsMouse ? root.accentColor : root.glassBorder)
+                    borderWidth: 1 * s
+                }
 
                 layer.enabled: true
                 layer.effect: DropShadow { color: "#50000000"; radius: 16; samples: 12 }
@@ -4075,9 +4122,14 @@ property int currentTab: 0
                 height: 38 * s
                 width: 38 * s
                 radius: 12 * s
-                color: root.isKeyboardOpen ? Qt.alpha(root.accentColor, 0.35) : (kbBtnMa.containsMouse ? Qt.alpha(root.accentColor, 0.28) : root.glassBg)
-                border.color: root.isKeyboardOpen ? root.accentColor : (kbBtnMa.containsMouse ? root.accentColor : root.glassBorder)
-                border.width: 1 * s
+                color: "transparent"
+
+                FrostedGlassCard {
+                    radius: parent.radius
+                    tintColor: root.isKeyboardOpen ? Qt.alpha(root.accentColor, 0.40) : (kbBtnMa.containsMouse ? Qt.alpha(root.accentColor, 0.28) : root.glassBg)
+                    borderColor: root.isKeyboardOpen ? root.accentColor : (kbBtnMa.containsMouse ? root.accentColor : root.glassBorder)
+                    borderWidth: 1 * s
+                }
 
                 Behavior on color { ColorAnimation { duration: 250 } }
                 Behavior on border.color { ColorAnimation { duration: 250 } }
@@ -4121,9 +4173,14 @@ property int currentTab: 0
         width: 780 * s
         height: 230 * s
         radius: 18 * s
-        color: root.glassBg
-        border.color: root.glassBorder
-        border.width: 1 * s
+        color: "transparent"
+
+        FrostedGlassCard {
+            radius: parent.radius
+            tintColor: root.glassBg
+            borderColor: root.glassBorder
+            borderWidth: 1 * s
+        }
         scale: root.isKeyboardOpen ? 1.0 : 0.90
         opacity: root.isKeyboardOpen ? 1 : 0
         visible: opacity > 0
