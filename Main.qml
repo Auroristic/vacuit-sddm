@@ -414,9 +414,21 @@ Rectangle {
 
     // Startup Animation
     Component.onCompleted: {
-
+        if (typeof Qt.inputMethod !== "undefined" && Qt.inputMethod) {
+            Qt.inputMethod.hide()
+        }
         introFadeAnim.start()
         updateClock()
+    }
+
+    // Suppress system Qt Virtual Keyboard overlay (prevents un-themed full-screen keyboard popup)
+    Connections {
+        target: Qt.inputMethod
+        function onVisibleChanged() {
+            if (Qt.inputMethod && Qt.inputMethod.visible) {
+                Qt.inputMethod.hide()
+            }
+        }
     }
 
     NumberAnimation {
@@ -1468,6 +1480,7 @@ Rectangle {
                             cursorVisible: false
                             cursorDelegate: Item { visible: false }
                             focus: true
+                            inputMethodHints: Qt.ImhHiddenText | Qt.ImhSensitiveData | Qt.ImhNoAutoUppercase | Qt.ImhNoPredictiveText
 
                             Keys.onPressed: function(event) {
                                 if (event.key === Qt.Key_Escape) {
@@ -4768,6 +4781,9 @@ property int currentTab: 0
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
                         root.isKeyboardOpen = !root.isKeyboardOpen
+                        if (typeof Qt.inputMethod !== "undefined" && Qt.inputMethod) {
+                            Qt.inputMethod.hide()
+                        }
                         if (root.isKeyboardOpen) {
                             root.powerMenuOpen = false
                             root.settingsOpen = false
@@ -4893,6 +4909,9 @@ property int currentTab: 0
                     btnWidth: 44 * s
                     onKeyClicked: {
                         root.isKeyboardOpen = false
+                        if (typeof Qt.inputMethod !== "undefined" && Qt.inputMethod) {
+                            Qt.inputMethod.hide()
+                        }
                         passwordInput.forceActiveFocus()
                     }
                 }

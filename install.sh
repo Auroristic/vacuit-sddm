@@ -148,6 +148,15 @@ fi
 if [ ! -f "$SDDM_CONF" ]; then
     echo -e "[Theme]\nCurrent=$THEME_NAME" | sudo tee "$SDDM_CONF" > /dev/null
 else
+    # Disable leftover qtvirtualkeyboard from other themes (prevents full-screen unthemed keyboard overlay)
+    if grep -q "^InputMethod=qtvirtualkeyboard" "$SDDM_CONF" 2>/dev/null; then
+        sudo sed -i "s|^InputMethod=qtvirtualkeyboard|#InputMethod=qtvirtualkeyboard|" "$SDDM_CONF"
+        substep "Disabled conflicting qtvirtualkeyboard in $SDDM_CONF"
+    fi
+    if grep -q "QT_IM_MODULE=qtvirtualkeyboard" "$SDDM_CONF" 2>/dev/null; then
+        sudo sed -i "s|QT_IM_MODULE=qtvirtualkeyboard||g" "$SDDM_CONF"
+    fi
+
     if grep -q "^Current=" "$SDDM_CONF"; then
         sudo sed -i "s|^Current=.*|Current=$THEME_NAME|" "$SDDM_CONF"
     else
