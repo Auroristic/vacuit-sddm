@@ -241,6 +241,15 @@ Rectangle {
     // ──────────────────────────────────────────
     // Real SDDM Models for Users & Sessions (Zero Mock Data!)
     // ──────────────────────────────────────────
+    function getUserAvatar(uLogin, sddmIcon) {
+        // Always prioritize user's actual ~/.face before SDDM generic silhouette fallback!
+        if (sddmIcon && sddmIcon !== "" && sddmIcon.indexOf("/usr/share/sddm/faces/") === -1) {
+            return sddmIcon
+        }
+        var login = uLogin || "retro"
+        return "file:///home/" + login + "/.face"
+    }
+
     property int currentUserIdx: (typeof userModel !== "undefined" && userModel.lastIndex >= 0) ? userModel.lastIndex : 0
     readonly property var activeUser: {
         if (userHelper.currentItem && userHelper.currentItem.uLogin !== "") {
@@ -264,7 +273,7 @@ Rectangle {
         delegate: Item {
             property string uLogin: (typeof model !== "undefined" && model.name) ? model.name : "retro"
             property string uName: (typeof model !== "undefined" && (model.realName || model.name)) ? (model.realName || model.name) : "retro"
-            property string uIcon: (typeof model !== "undefined" && model.icon) ? model.icon : ("file:///home/" + uLogin + "/.face")
+            property string uIcon: root.getUserAvatar(uLogin, (typeof model !== "undefined" && model.icon) ? model.icon : "")
         }
     }
 
@@ -364,6 +373,7 @@ Rectangle {
 
     // Startup Animation
     Component.onCompleted: {
+
         introFadeAnim.start()
         updateClock()
     }
@@ -1639,7 +1649,7 @@ Rectangle {
                         Image {
                             id: userFaceImg
                             anchors.fill: parent
-                            source: root.activeUser.icon !== "" ? root.activeUser.icon : "file:///home/" + root.activeUser.name + "/.face"
+                            source: root.getUserAvatar(root.activeUser.name, root.activeUser.icon)
                             cache: false
                             fillMode: Image.PreserveAspectCrop
                             smooth: true
@@ -3697,7 +3707,7 @@ property int currentTab: 0
                                     id: avatarPreviewFaceImg
                                     anchors.fill: parent
                                     anchors.margins: 2 * s
-                                    source: (root.activeUser.icon && root.activeUser.icon !== "") ? root.activeUser.icon : "file:///home/" + root.activeUser.name + "/.face"
+                                    source: root.getUserAvatar(root.activeUser.name, root.activeUser.icon)
                                     fillMode: Image.PreserveAspectCrop
                                     visible: false
                                 }
