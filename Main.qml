@@ -396,47 +396,33 @@ Rectangle {
     onIs12HourChanged: updateClock()
 
     // ──────────────────────────────────────────
-    // Background & Deep Gaussian Blur Transition
+    // Background & Live Real-Time Scene Blur
     // ──────────────────────────────────────────
-    Image {
-        id: bgImage
+    Item {
+        id: bgSceneLayer
         anchors.fill: parent
-        source: "bg.jpg"
-        fillMode: Image.PreserveAspectCrop
-        sourceSize.width: root.width
-        sourceSize.height: root.height
-        smooth: true
-        visible: false
-    }
+        layer.enabled: true
 
-    Image {
-        id: bgSharp
-        anchors.fill: parent
-        source: "bg.jpg"
-        fillMode: Image.PreserveAspectCrop
-        sourceSize.width: root.width
-        sourceSize.height: root.height
-        smooth: true
-        opacity: root.isUnlocked ? 0 : 1
-        Behavior on opacity { NumberAnimation { duration: 600; easing.type: Easing.OutCubic } }
-    }
+        Image {
+            id: bgSharp
+            anchors.fill: parent
+            source: "bg.jpg"
+            fillMode: Image.PreserveAspectCrop
+            sourceSize.width: root.width
+            sourceSize.height: root.height
+            smooth: true
+            opacity: root.isUnlocked ? 0 : 1
+            Behavior on opacity { NumberAnimation { duration: 600; easing.type: Easing.OutCubic } }
+        }
 
-    FastBlur {
-        id: bgBlur
-        anchors.fill: parent
-        source: bgImage
-        radius: root.glassBlurRadius
-        opacity: root.isUnlocked ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: 600; easing.type: Easing.OutCubic } }
-    }
-
-    FastBlur {
-        id: fullGlassBlur
-        anchors.fill: parent
-        source: bgImage
-        radius: root.glassBlurRadius
-        visible: false
-    }
+        FastBlur {
+            id: bgBlur
+            anchors.fill: parent
+            source: bgSharp
+            radius: root.glassBlurRadius
+            opacity: root.isUnlocked ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: 600; easing.type: Easing.OutCubic } }
+        }
 
     // Ambient floating lava lamp geometric shapes (Triangles, Cookies, Diamonds, etc.)
     Item {
@@ -509,6 +495,16 @@ Rectangle {
             GradientStop { position: 0.7; color: "#15000000" }
             GradientStop { position: 1.0; color: "#b0010307" }
         }
+    }
+    }
+
+    // Live Real-Time FastBlur of the entire background scene for FrostedGlassCard!
+    FastBlur {
+        id: fullGlassBlur
+        anchors.fill: bgSceneLayer
+        source: bgSceneLayer
+        radius: root.glassBlurRadius
+        z: -999
     }
 
     // Background Click Handler

@@ -22,6 +22,8 @@ Item {
 
     ShaderEffectSource {
         sourceItem: fullGlassBlur
+        live: true
+        recursive: false
         width: root.width
         height: root.height
         x: -glassBackdrop.mapToItem(root, 0, 0).x
