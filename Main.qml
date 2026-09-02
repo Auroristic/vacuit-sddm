@@ -644,6 +644,20 @@ Rectangle {
             onTriggered: root.updateClock()
         }
 
+        // Toggleable Frosted Glass Background Card (Unscaled 1:1 on Screen!)
+        FrostedGlassCard {
+            id: clockGlassCard
+            anchors.fill: parent
+            anchors.margins: -18 * s * Math.min(1.2, root.clockScale)
+            radius: 24 * s * Math.min(1.2, root.clockScale)
+            tintColor: Qt.alpha(root.glassBg, root.clockCardOpacity)
+            borderColor: Qt.alpha(root.glassBorder, 0.40)
+            borderWidth: 1.5 * s
+            visible: root.clockCardEnabled
+            opacity: root.clockCardEnabled ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: 300 } }
+        }
+
         Item {
             id: clockScaler
             anchors.centerIn: parent
@@ -651,20 +665,6 @@ Rectangle {
             height: clockContainer.activeH
             scale: root.clockScale
             transformOrigin: Item.Center
-
-            // Toggleable Frosted Glass Background Card
-            FrostedGlassCard {
-                id: clockGlassCard
-                anchors.fill: parent
-                anchors.margins: -18 * s
-                radius: 24 * s
-                tintColor: Qt.alpha(root.glassBg, root.clockCardOpacity)
-                borderColor: Qt.alpha(root.glassBorder, 0.40)
-                borderWidth: 1.5 * s
-                visible: root.clockCardEnabled
-                opacity: root.clockCardEnabled ? 1 : 0
-                Behavior on opacity { NumberAnimation { duration: 300 } }
-            }
 
             // Style 1: Caelestia Split (Hours:Minutes | 3-Tier Date)
             Row {
@@ -990,6 +990,20 @@ Rectangle {
         Behavior on y { NumberAnimation { duration: 450; easing.type: Easing.OutCubic } }
         Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
 
+        // Toggleable Frosted Glass Background Card (Unscaled 1:1 on Screen!)
+        FrostedGlassCard {
+            id: loginGlassCard
+            anchors.fill: parent
+            anchors.margins: -18 * s * Math.min(1.2, root.loginScale)
+            radius: 24 * s * Math.min(1.2, root.loginScale)
+            tintColor: Qt.alpha(root.glassBg, root.loginCardOpacity)
+            borderColor: Qt.alpha(root.glassBorder, 0.40)
+            borderWidth: 1.5 * s
+            visible: root.loginCardEnabled
+            opacity: root.loginCardEnabled ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: 300 } }
+        }
+
         Item {
             id: loginScaler
             anchors.centerIn: parent
@@ -997,20 +1011,6 @@ Rectangle {
             height: loginContentInner.height
             scale: root.loginScale
             transformOrigin: Item.Center
-
-            // Toggleable Frosted Glass Background Card
-            FrostedGlassCard {
-                id: loginGlassCard
-                anchors.fill: loginContentInner
-                anchors.margins: -18 * s
-                radius: 24 * s
-                tintColor: Qt.alpha(root.glassBg, root.loginCardOpacity)
-                borderColor: Qt.alpha(root.glassBorder, 0.40)
-                borderWidth: 1.5 * s
-                visible: root.loginCardEnabled
-                opacity: root.loginCardEnabled ? 1 : 0
-                Behavior on opacity { NumberAnimation { duration: 300 } }
-            }
 
             Item {
                 id: loginContentInner
