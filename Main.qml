@@ -1561,45 +1561,22 @@ Rectangle {
             z: 50
 
             property int currentTab: 0
-            property bool isTransitioningHeight: false
-
-            onCurrentTabChanged: {
-                isTransitioningHeight = true
-                heightTransitionTimer.restart()
-            }
-
-            Connections {
-                target: root
-                function onSettingsOpenChanged() {
-                    morphingSettingsContainer.isTransitioningHeight = true
-                    heightTransitionTimer.restart()
-                }
-            }
-
-            Timer {
-                id: heightTransitionTimer
-                interval: 340
-                onTriggered: morphingSettingsContainer.isTransitioningHeight = false
-            }
 
             layer.enabled: true
             layer.effect: DropShadow { color: "#50000000"; radius: root.settingsOpen ? 22 : 16; samples: 16 }
 
-            Behavior on width { NumberAnimation { duration: 320; easing.type: Easing.OutCubic } }
-            Behavior on height {
-                enabled: morphingSettingsContainer.isTransitioningHeight
-                NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
-            }
-            Behavior on radius { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
-            Behavior on color { ColorAnimation { duration: 200 } }
-            Behavior on border.color { ColorAnimation { duration: 200 } }
+            Behavior on width { NumberAnimation { duration: 420; easing.type: Easing.OutCubic } }
+            Behavior on height { NumberAnimation { duration: 420; easing.type: Easing.OutCubic } }
+            Behavior on radius { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+            Behavior on color { ColorAnimation { duration: 250 } }
+            Behavior on border.color { ColorAnimation { duration: 250 } }
 
-            // Collapsed View: Gear Icon Button
+            // Collapsed View: Gear Icon Button with Buttery Morph
             Item {
                 anchors.fill: parent
-                visible: !root.settingsOpen
+                visible: opacity > 0
                 opacity: root.settingsOpen ? 0 : 1
-                Behavior on opacity { NumberAnimation { duration: 200 } }
+                Behavior on opacity { NumberAnimation { duration: 220 } }
 
                 Text {
                     anchors.centerIn: parent
@@ -1608,6 +1585,8 @@ Rectangle {
                     font.pixelSize: 16 * s
                     color: settingsBtnMa.containsMouse ? root.accentColor : root.textPrimary
                     Behavior on color { ColorAnimation { duration: 200 } }
+                    rotation: root.settingsOpen ? 90 : 0
+                    Behavior on rotation { NumberAnimation { duration: 420; easing.type: Easing.OutCubic } }
                 }
 
                 MouseArea {
@@ -1633,9 +1612,9 @@ Rectangle {
                 anchors.right: parent.right
                 anchors.margins: 14 * s
                 spacing: 4 * s
-                visible: root.settingsOpen
+                visible: opacity > 0
                 opacity: root.settingsOpen ? 1 : 0
-                Behavior on opacity { NumberAnimation { duration: 220 } }
+                Behavior on opacity { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
 
                 // Top Header Row
                 Item {
