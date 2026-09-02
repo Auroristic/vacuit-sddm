@@ -1,0 +1,5 @@
+# Local agent workspace rules & scratch files
+.agents/
+scratch/
+*.qmlc
+*.jsc
