@@ -1389,9 +1389,7 @@ Rectangle {
                             onAccepted: doLogin()
 
                             Text {
-                                anchors.left: parent.left
-                                anchors.leftMargin: 4 * s
-                                anchors.verticalCenter: parent.verticalCenter
+                                anchors.centerIn: parent
                                 text: "Password..."
                                 color: root.textMuted
                                 font.family: root.sansFont
@@ -1400,12 +1398,10 @@ Rectangle {
                                 opacity: 0.65
                             }
 
-                            // Pre-allocated Fixed Pool of 24 Animated Dots (Zero lifecycle flicker!)
+                            // Pre-allocated Fixed Pool of 24 Animated Dots with Android 14 / M3 Cooldown Morphing!
                             Row {
                                 id: dotsContainer
-                                anchors.left: parent.left
-                                anchors.leftMargin: 4 * s
-                                anchors.verticalCenter: parent.verticalCenter
+                                anchors.centerIn: parent
                                 spacing: 4 * s
 
                                 Repeater {
@@ -1415,39 +1411,50 @@ Rectangle {
                                     Item {
                                         id: dotWrapper
                                         property bool isShown: index < passwordInput.text.length
-                                        property var currentShape: root.passwordM3Shapes[Math.floor(Math.random() * root.passwordM3Shapes.length)]
-                                        width: isShown ? 12 * s : 0
-                                        height: 12 * s
+                                        property var randomShape: root.passwordM3Shapes[Math.floor(Math.random() * root.passwordM3Shapes.length)]
+                                        property bool isMorphedToCircle: false
+
+                                        width: isShown ? 13 * s : 0
+                                        height: 14 * s
                                         visible: width > 0
+
+                                        Timer {
+                                            id: morphTimer
+                                            interval: 1000 // 1-second cooldown per Android 14 / M3 spec!
+                                            repeat: false
+                                            onTriggered: {
+                                                dotWrapper.isMorphedToCircle = true
+                                            }
+                                        }
 
                                         onIsShownChanged: {
                                             if (isShown) {
-                                                currentShape = root.passwordM3Shapes[Math.floor(Math.random() * root.passwordM3Shapes.length)]
+                                                isMorphedToCircle = false
+                                                randomShape = root.passwordM3Shapes[Math.floor(Math.random() * root.passwordM3Shapes.length)]
+                                                morphTimer.restart()
+                                            } else {
+                                                morphTimer.stop()
+                                                isMorphedToCircle = false
                                             }
                                         }
 
                                         Behavior on width {
-                                            NumberAnimation { duration: 180; easing.type: Easing.OutBack }
+                                            NumberAnimation { duration: 200; easing.type: Easing.OutBack }
                                         }
 
                                         MaterialShape {
                                             anchors.centerIn: parent
-                                            width: 10 * s
-                                            height: 10 * s
-                                            shape: dotWrapper.currentShape
+                                            width: dotWrapper.isMorphedToCircle ? 8.5 * s : 12 * s
+                                            height: width
+                                            shape: dotWrapper.isMorphedToCircle ? MaterialShape.Circle : dotWrapper.randomShape
                                             color: "#ffffff"
                                             scale: dotWrapper.isShown ? 1.0 : 0.0
-                                            rotation: dotWrapper.isShown ? 0 : -25
+                                            rotation: dotWrapper.isShown ? (dotWrapper.isMorphedToCircle ? 0 : 15) : -25
+                                            animationDuration: 300
 
-                                            Behavior on scale {
-                                                NumberAnimation { duration: 200; easing.type: Easing.OutBack }
-                                            }
-                                            Behavior on rotation {
-                                                NumberAnimation { duration: 200; easing.type: Easing.OutBack }
-                                            }
-                                            Behavior on color {
-                                                ColorAnimation { duration: 200 }
-                                            }
+                                            Behavior on width { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+                                            Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+                                            Behavior on rotation { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
                                         }
                                     }
                                 }
@@ -1493,25 +1500,34 @@ Rectangle {
                         }
                     }
 
-                    // Submit Action Arrow Pill
-                    Rectangle {
+                    // Submit Action Arrow Pill (Morphs into M3 Arrowhead when typing!)
+                    Item {
                         id: submitArrow
                         z: 10
                         width: 34 * s
                         height: 34 * s
-                        radius: root.getBoxRadius(height)
                         anchors.right: parent.right
                         anchors.rightMargin: 8 * s
                         anchors.verticalCenter: parent.verticalCenter
-                        color: passwordInput.text.length > 0 ? root.accentColor : (submitMa.containsMouse ? Qt.alpha(root.accentColor, 0.25) : Qt.rgba(1, 1, 1, 0.08))
                         scale: submitMa.pressed ? 0.92 : (passwordInput.text.length > 0 ? 1.05 : 1.0)
                         visible: !root.isLoggingIn
 
-                        Behavior on color { ColorAnimation { duration: 200 } }
                         Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+
+                        MaterialShape {
+                            anchors.fill: parent
+                            shape: passwordInput.text.length > 0 ? MaterialShape.Triangle : MaterialShape.Circle
+                            rotation: passwordInput.text.length > 0 ? 90 : 0
+                            color: passwordInput.text.length > 0 ? root.accentColor : (submitMa.containsMouse ? Qt.alpha(root.accentColor, 0.25) : Qt.rgba(1, 1, 1, 0.08))
+                            animationDuration: 300
+
+                            Behavior on color { ColorAnimation { duration: 200 } }
+                            Behavior on rotation { NumberAnimation { duration: 300; easing.type: Easing.OutBack } }
+                        }
 
                         Text {
                             anchors.centerIn: parent
+                            anchors.horizontalCenterOffset: passwordInput.text.length > 0 ? 1 * s : 0
                             text: "󰁔"
                             font.family: root.monoFont
                             font.pixelSize: 14 * s
