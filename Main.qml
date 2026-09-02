@@ -76,6 +76,7 @@ Rectangle {
 
     readonly property var passwordM3Shapes: [
         MaterialShape.Cookie9Sided,
+        MaterialShape.Triangle,
         MaterialShape.ClamShell,
         MaterialShape.Sunny,
         MaterialShape.Cookie4Sided,
@@ -85,10 +86,62 @@ Rectangle {
         MaterialShape.Cookie7Sided
     ]
 
+    // ──────────────────────────────────────────
+    // 9-Grid Positioning Engine & Kinetic Physics
+    // ──────────────────────────────────────────
+    readonly property var gridPositionNames: [
+        "Top Left",    "Top Center",    "Top Right",
+        "Middle Left", "Middle Center", "Middle Right",
+        "Bottom Left", "Bottom Center", "Bottom Right"
+    ]
+
+    function getGridX(posIndex, itemW, marginX) {
+        var col = posIndex % 3
+        if (col === 0) return marginX
+        if (col === 1) return (root.width - itemW) / 2
+        return root.width - itemW - marginX
+    }
+
+    function getGridY(posIndex, itemH, marginY, bottomReserved) {
+        var row = Math.floor(posIndex / 3)
+        if (row === 0) return marginY
+        if (row === 1) return (root.height - itemH - bottomReserved) / 2
+        return root.height - itemH - marginY - bottomReserved
+    }
+
+    // ──────────────────────────────────────────
+    // Clock Customization Properties
+    // ──────────────────────────────────────────
+    property string clockStyle: "Caelestia Split" // "Caelestia Split", "Classic Minimal", "Two-Tier Stacked", "Compact Capsule"
+    property int clockGridPos: 2 // Default: 2 (Top Right)
+    property real clockScale: 1.0 // 0.6 to 2.2
+    property bool clockCardEnabled: false
+    property real clockCardOpacity: 0.35 // 0.15 to 0.85
+    property bool clockShowOnLogin: true
+
+    // Dynamic Clock Strings (Auto-updated by updateClock())
+    property string clockHours: "00"
+    property string clockMinutes: "00"
+    property string clockAmPm: "AM"
+    property string clockMonthName: "SEPTEMBER"
+    property string clockDayNum: "03"
+    property string clockWeekday: "Thursday"
+    property string clockFullDate: ""
+
+    // ──────────────────────────────────────────
+    // Login Container Customization Properties
+    // ──────────────────────────────────────────
+    property int loginGridPos: 5 // Default: 5 (Middle Right)
+    property real loginScale: 1.0 // 0.7 to 1.6
+    property bool loginCardEnabled: false
+    property real loginCardOpacity: 0.40 // 0.15 to 0.85
+    property string avatarOrientation: "Right" // "Right", "Left", "Top Center", "Top Left", "Top Right"
+    property string boxStyle: "Glass Pill" // "Glass Pill", "Minimal Underline", "Split Badge", "Sharp M3 Card"
+
     function getBoxRadius(h) {
-        if (boxShape === "Pill") return h / 2
-        if (boxShape === "Rounded") return 14 * s
-        if (boxShape === "Sharp") return 4 * s
+        if (boxStyle === "Glass Pill" || boxStyle === "Split Badge") return h / 2
+        if (boxStyle === "Sharp M3 Card") return 6 * s
+        if (boxStyle === "Minimal Underline") return 4 * s
         return 14 * s
     }
 
@@ -290,8 +343,23 @@ Rectangle {
     }
 
     function updateClock() {
-        lockClock.text = getFormattedTime()
-        ampmLabel.text = getFormattedAmPm()
+        var d = new Date()
+        var hours = d.getHours()
+        var minutes = d.getMinutes()
+        var minsStr = (minutes < 10 ? "0" : "") + minutes
+        if (root.is12Hour) {
+            var h12 = hours % 12
+            if (h12 === 0) h12 = 12
+            root.clockHours = (h12 < 10 ? "0" : "") + h12
+        } else {
+            root.clockHours = (hours < 10 ? "0" : "") + hours
+        }
+        root.clockMinutes = minsStr
+        root.clockAmPm = hours >= 12 ? "PM" : "AM"
+        root.clockMonthName = Qt.formatDate(d, "MMMM").toUpperCase()
+        root.clockDayNum = Qt.formatDate(d, "dd")
+        root.clockWeekday = Qt.formatDate(d, "dddd")
+        root.clockFullDate = Qt.formatDate(d, "dddd, MMMM d, yyyy").toUpperCase()
     }
 
     onIs12HourChanged: updateClock()
@@ -423,88 +491,336 @@ Rectangle {
     // ──────────────────────────────────────────
     // STATE 1: Lockscreen Intro Clock & Date (Right Side)
     // ──────────────────────────────────────────
+    // ──────────────────────────────────────────
+    // Clock Customization Container (9-Grid Kinetic Glide + 4 Styles + Card)
+    // ──────────────────────────────────────────
     Item {
-        id: lockscreenView
-        anchors.fill: parent
-        opacity: (!root.isUnlocked) ? root.uiOpacity : 0
+        id: clockContainer
+        x: root.getGridX(root.clockGridPos, width, 50 * s)
+        y: root.getGridY(root.clockGridPos, height, 48 * s, 70 * s)
+        width: Math.max(120 * s, clockCard.width * root.clockScale)
+        height: Math.max(48 * s, clockCard.height * root.clockScale)
+        opacity: (!root.isUnlocked) ? root.uiOpacity : (root.clockShowOnLogin ? (root.uiOpacity * 0.90) : 0)
         visible: opacity > 0
         z: 5
 
+        Behavior on x { NumberAnimation { duration: 450; easing.type: Easing.OutCubic } }
+        Behavior on y { NumberAnimation { duration: 450; easing.type: Easing.OutCubic } }
         Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
 
-        Column {
-            anchors.right: parent.right
-            anchors.rightMargin: 120 * s
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.verticalCenterOffset: root.isUnlocked ? -40 * s : 0
-            spacing: 12 * s
-            transformOrigin: Item.Right
+        Timer {
+            interval: 1000
+            running: true
+            repeat: true
+            triggeredOnStart: true
+            onTriggered: root.updateClock()
+        }
 
-            Behavior on anchors.verticalCenterOffset { NumberAnimation { duration: 500; easing.type: Easing.OutCubic } }
+        Item {
+            id: clockScaler
+            anchors.centerIn: parent
+            width: clockCard.width
+            height: clockCard.height
+            scale: root.clockScale
+            transformOrigin: Item.Center
 
-            Row {
-                anchors.right: parent.right
-                spacing: 14 * s
-
-                Text {
-                    id: lockClock
-                    text: root.getFormattedTime()
-                    color: root.textPrimary
-                    font.family: root.monoFont
-                    font.pixelSize: 112 * s
-                    font.weight: Font.Bold
-                    anchors.verticalCenter: parent.verticalCenter
-                    layer.enabled: true
-                    layer.effect: DropShadow { color: "#aa000000"; radius: 24; samples: 20 }
-                }
-
-                Text {
-                    id: ampmLabel
-                    text: root.getFormattedAmPm()
-                    color: root.accentColor
-                    font.family: root.sansFont
-                    font.pixelSize: 22 * s
-                    font.weight: Font.Bold
-                    visible: root.is12Hour
-                    anchors.bottom: lockClock.bottom
-                    anchors.bottomMargin: 24 * s
-                    Behavior on color { ColorAnimation { duration: 250 } }
-                }
-
-                Timer {
-                    interval: 1000
-                    running: true
-                    repeat: true
-                    onTriggered: root.updateClock()
-                }
+            // Toggleable Frosted Glass Background Card
+            Rectangle {
+                id: clockGlassCard
+                anchors.fill: clockCard
+                anchors.margins: -18 * s
+                radius: 24 * s
+                color: Qt.alpha(root.glassBg, root.clockCardOpacity)
+                border.color: Qt.alpha(root.glassBorder, 0.40)
+                border.width: 1.5 * s
+                visible: root.clockCardEnabled
+                opacity: root.clockCardEnabled ? 1 : 0
+                layer.enabled: root.clockCardEnabled
+                layer.effect: DropShadow { color: "#40000000"; radius: 18; samples: 16 }
+                Behavior on opacity { NumberAnimation { duration: 300 } }
+                Behavior on color { ColorAnimation { duration: 250 } }
             }
 
-            Row {
-                anchors.right: parent.right
-                spacing: 10 * s
+            // Clock Content (Switchable between 4 styles)
+            Item {
+                id: clockCard
+                width: childrenRect.width
+                height: childrenRect.height
 
-                Rectangle {
-                    width: 7 * s
-                    height: 7 * s
-                    radius: 3.5 * s
-                    color: root.accentColor
-                    anchors.verticalCenter: parent.verticalCenter
-                    Behavior on color { ColorAnimation { duration: 250 } }
+                // Style 1: Caelestia Split (Hours:Minutes | 3-Tier Date)
+                Row {
+                    id: styleCaelestiaSplit
+                    visible: root.clockStyle === "Caelestia Split"
+                    spacing: 16 * s
+                    anchors.top: parent.top
+                    anchors.left: parent.left
+
+                    // Left: Digital Hours:Minutes
+                    Row {
+                        spacing: 4 * s
+                        anchors.verticalCenter: parent.verticalCenter
+
+                        Text {
+                            text: root.clockHours + ":" + root.clockMinutes
+                            color: root.textPrimary
+                            font.family: root.monoFont
+                            font.pixelSize: 84 * s
+                            font.weight: Font.Bold
+                            anchors.verticalCenter: parent.verticalCenter
+                            layer.enabled: true
+                            layer.effect: DropShadow { color: "#aa000000"; radius: 24; samples: 20 }
+                        }
+
+                        Text {
+                            text: root.clockAmPm
+                            color: root.accentColor
+                            font.family: root.sansFont
+                            font.pixelSize: 18 * s
+                            font.weight: Font.Bold
+                            visible: root.is12Hour
+                            anchors.bottom: parent.bottom
+                            anchors.bottomMargin: 14 * s
+                            Behavior on color { ColorAnimation { duration: 250 } }
+                        }
+                    }
+
+                    // Center: Vertical Glass Divider
+                    Rectangle {
+                        width: 2 * s
+                        height: 56 * s
+                        radius: 1 * s
+                        color: Qt.alpha(root.textPrimary, 0.25)
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    // Right: 3-Tier Stacked Date Column
+                    Column {
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 2 * s
+
+                        Text {
+                            text: root.clockMonthName
+                            color: root.accentColor
+                            font.family: root.sansFont
+                            font.pixelSize: 13 * s
+                            font.letterSpacing: 2 * s
+                            font.weight: Font.Bold
+                            layer.enabled: true
+                            layer.effect: DropShadow { color: "#80000000"; radius: 8; samples: 8 }
+                            Behavior on color { ColorAnimation { duration: 250 } }
+                        }
+
+                        Text {
+                            text: root.clockDayNum
+                            color: root.textPrimary
+                            font.family: root.sansFont
+                            font.pixelSize: 28 * s
+                            font.weight: Font.ExtraBold
+                            layer.enabled: true
+                            layer.effect: DropShadow { color: "#aa000000"; radius: 14; samples: 12 }
+                        }
+
+                        Text {
+                            text: root.clockWeekday
+                            color: root.textSecondary
+                            font.family: root.sansFont
+                            font.pixelSize: 13 * s
+                            font.weight: Font.Medium
+                        }
+                    }
                 }
 
-                Text {
-                    text: Qt.formatDate(new Date(), "dddd, MMMM d, yyyy").toUpperCase()
-                    color: root.textSecondary
-                    font.family: root.sansFont
-                    font.pixelSize: 14 * s
-                    font.letterSpacing: 2 * s
-                    font.weight: Font.DemiBold
-                    anchors.verticalCenter: parent.verticalCenter
+                // Style 2: Classic Minimal (Horizontal Time with Date subtitle below)
+                Column {
+                    id: styleClassicMinimal
+                    visible: root.clockStyle === "Classic Minimal"
+                    spacing: 6 * s
+                    anchors.top: parent.top
+                    anchors.left: parent.left
+
+                    Row {
+                        spacing: 10 * s
+
+                        Text {
+                            text: root.clockHours + ":" + root.clockMinutes
+                            color: root.textPrimary
+                            font.family: root.monoFont
+                            font.pixelSize: 96 * s
+                            font.weight: Font.Bold
+                            anchors.verticalCenter: parent.verticalCenter
+                            layer.enabled: true
+                            layer.effect: DropShadow { color: "#aa000000"; radius: 24; samples: 20 }
+                        }
+
+                        Text {
+                            text: root.clockAmPm
+                            color: root.accentColor
+                            font.family: root.sansFont
+                            font.pixelSize: 20 * s
+                            font.weight: Font.Bold
+                            visible: root.is12Hour
+                            anchors.bottom: parent.bottom
+                            anchors.bottomMargin: 18 * s
+                            Behavior on color { ColorAnimation { duration: 250 } }
+                        }
+                    }
+
+                    Row {
+                        spacing: 10 * s
+                        Rectangle {
+                            width: 7 * s
+                            height: 7 * s
+                            radius: 3.5 * s
+                            color: root.accentColor
+                            anchors.verticalCenter: parent.verticalCenter
+                            Behavior on color { ColorAnimation { duration: 250 } }
+                        }
+                        Text {
+                            text: root.clockFullDate
+                            color: root.textSecondary
+                            font.family: root.sansFont
+                            font.pixelSize: 13 * s
+                            font.letterSpacing: 2 * s
+                            font.weight: Font.DemiBold
+                            anchors.verticalCenter: parent.verticalCenter
+                            layer.enabled: true
+                            layer.effect: DropShadow { color: "#80000000"; radius: 10; samples: 10 }
+                        }
+                    }
+                }
+
+                // Style 3: Two-Tier Stacked (Hours stacked over Minutes)
+                Row {
+                    id: styleTwoTierStacked
+                    visible: root.clockStyle === "Two-Tier Stacked"
+                    spacing: 16 * s
+                    anchors.top: parent.top
+                    anchors.left: parent.left
+
+                    Column {
+                        spacing: -10 * s
+                        anchors.verticalCenter: parent.verticalCenter
+
+                        Text {
+                            text: root.clockHours
+                            color: root.textPrimary
+                            font.family: root.monoFont
+                            font.pixelSize: 68 * s
+                            font.weight: Font.ExtraBold
+                            lineHeight: 0.9
+                            layer.enabled: true
+                            layer.effect: DropShadow { color: "#aa000000"; radius: 20; samples: 16 }
+                        }
+
+                        Text {
+                            text: root.clockMinutes
+                            color: root.accentColor
+                            font.family: root.monoFont
+                            font.pixelSize: 68 * s
+                            font.weight: Font.ExtraBold
+                            lineHeight: 0.9
+                            layer.enabled: true
+                            layer.effect: DropShadow { color: "#aa000000"; radius: 20; samples: 16 }
+                            Behavior on color { ColorAnimation { duration: 250 } }
+                        }
+                    }
+
+                    Column {
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 6 * s
+
+                        Rectangle {
+                            height: 26 * s
+                            width: twoTierDateText.implicitWidth + 18 * s
+                            radius: 13 * s
+                            color: Qt.alpha(root.accentColor, 0.20)
+                            border.color: Qt.alpha(root.accentColor, 0.40)
+                            border.width: 1 * s
+
+                            Text {
+                                id: twoTierDateText
+                                anchors.centerIn: parent
+                                text: (root.clockWeekday.substring(0, 3) + ", " + root.clockMonthName.substring(0, 3) + " " + root.clockDayNum).toUpperCase()
+                                color: "#ffffff"
+                                font.family: root.sansFont
+                                font.pixelSize: 11 * s
+                                font.weight: Font.Bold
+                                font.letterSpacing: 1 * s
+                            }
+                        }
+
+                        Text {
+                            text: root.clockAmPm
+                            color: root.textSecondary
+                            font.family: root.sansFont
+                            font.pixelSize: 15 * s
+                            font.weight: Font.Bold
+                            visible: root.is12Hour
+                        }
+                    }
+                }
+
+                // Style 4: Compact Capsule (Inline pill with time & date)
+                Rectangle {
+                    id: styleCompactCapsule
+                    visible: root.clockStyle === "Compact Capsule"
+                    height: 48 * s
+                    width: capsuleRow.implicitWidth + 36 * s
+                    radius: 24 * s
+                    color: root.glassBg
+                    border.color: root.glassBorder
+                    border.width: 1.5 * s
                     layer.enabled: true
-                    layer.effect: DropShadow { color: "#80000000"; radius: 10; samples: 10 }
+                    layer.effect: DropShadow { color: "#50000000"; radius: 12; samples: 12 }
+
+                    Row {
+                        id: capsuleRow
+                        anchors.centerIn: parent
+                        spacing: 12 * s
+
+                        Text {
+                            text: root.clockHours + ":" + root.clockMinutes + (root.is12Hour ? (" " + root.clockAmPm) : "")
+                            color: root.textPrimary
+                            font.family: root.monoFont
+                            font.pixelSize: 18 * s
+                            font.weight: Font.Bold
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+
+                        Rectangle {
+                            width: 5 * s
+                            height: 5 * s
+                            radius: 2.5 * s
+                            color: root.accentColor
+                            anchors.verticalCenter: parent.verticalCenter
+                            Behavior on color { ColorAnimation { duration: 250 } }
+                        }
+
+                        Text {
+                            text: root.clockWeekday.substring(0, 3) + ", " + root.clockMonthName.substring(0, 3) + " " + root.clockDayNum
+                            color: root.textSecondary
+                            font.family: root.sansFont
+                            font.pixelSize: 14 * s
+                            font.weight: Font.DemiBold
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                    }
                 }
             }
         }
+    }
+
+    // ──────────────────────────────────────────
+    // Lockscreen Unlock Hint (Bottom Centered)
+    // ──────────────────────────────────────────
+    Item {
+        id: lockscreenHintItem
+        anchors.fill: parent
+        opacity: (!root.isUnlocked) ? root.uiOpacity : 0
+        visible: opacity > 0
+        z: 6
+
+        Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
 
         Row {
             anchors.bottom: parent.bottom
@@ -536,338 +852,408 @@ Rectangle {
     // ──────────────────────────────────────────
     // STATE 2: Right-Aligned Login Panel (Kaneki Layout + Themed Glass Password Box)
     // ──────────────────────────────────────────
+    // ──────────────────────────────────────────
+    // STATE 2: Login Container (9-Grid Kinetic Engine, Avatar Orientations, Box Styles)
+    // ──────────────────────────────────────────
     Item {
         id: loginPanelContainer
-        anchors.right: parent.right
-        anchors.rightMargin: 110 * s
-        anchors.verticalCenter: parent.verticalCenter
-        anchors.verticalCenterOffset: root.isKeyboardOpen ? -140 * s : 0
-        width: 440 * s
-        height: 220 * s
+        x: root.getGridX(root.loginGridPos, width, 50 * s)
+        y: root.getGridY(root.loginGridPos, height, 48 * s, 70 * s) - (root.isKeyboardOpen ? 120 * s : 0)
+        width: Math.max(280 * s, loginContentInner.width * root.loginScale)
+        height: Math.max(90 * s, loginContentInner.height * root.loginScale)
         opacity: root.isUnlocked ? root.uiOpacity : 0
         visible: opacity > 0
         z: 10
 
+        Behavior on x { NumberAnimation { duration: 450; easing.type: Easing.OutCubic } }
+        Behavior on y { NumberAnimation { duration: 450; easing.type: Easing.OutCubic } }
         Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
-        Behavior on anchors.verticalCenterOffset { NumberAnimation { duration: 420; easing.type: Easing.OutCubic } }
 
         Item {
-            anchors.fill: parent
+            id: loginScaler
+            anchors.centerIn: parent
+            width: loginContentInner.width
+            height: loginContentInner.height
+            scale: root.loginScale
+            transformOrigin: Item.Center
 
-            // Username display with Accent Dot
-            Row {
-                anchors.right: avatarFrame.left
-                anchors.rightMargin: 20 * s
-                anchors.bottom: passwordBoxRect.top
-                anchors.bottomMargin: 10 * s
-                spacing: 8 * s
-
-                Rectangle {
-                    width: 6 * s
-                    height: 6 * s
-                    radius: 3 * s
-                    color: root.accentColor
-                    anchors.verticalCenter: parent.verticalCenter
-                    Behavior on color { ColorAnimation { duration: 250 } }
-                }
-
-                Text {
-                    id: userDisplayName
-                    text: root.activeUser.realName
-                    color: root.textPrimary
-                    font.family: root.sansFont
-                    font.pixelSize: 16 * s
-                    font.weight: Font.Bold
-                    font.letterSpacing: 0.5 * s
-                }
+            // Toggleable Frosted Glass Background Card
+            Rectangle {
+                id: loginGlassCard
+                anchors.fill: loginContentInner
+                anchors.margins: -18 * s
+                radius: 24 * s
+                color: Qt.alpha(root.glassBg, root.loginCardOpacity)
+                border.color: Qt.alpha(root.glassBorder, 0.40)
+                border.width: 1.5 * s
+                visible: root.loginCardEnabled
+                opacity: root.loginCardEnabled ? 1 : 0
+                layer.enabled: root.loginCardEnabled
+                layer.effect: DropShadow { color: "#40000000"; radius: 18; samples: 16 }
+                Behavior on opacity { NumberAnimation { duration: 300 } }
+                Behavior on color { ColorAnimation { duration: 250 } }
             }
 
-            // ─── Themed Glass Password Box (Guaranteed Zero Overlap with Lock Icon!) ───
-            Rectangle {
-                id: passwordBoxRect
-                anchors.right: avatarFrame.left
-                anchors.rightMargin: 20 * s
-                anchors.verticalCenter: avatarFrame.verticalCenter
-                width: 275 * s
-                height: 52 * s
-                radius: root.getBoxRadius(height)
-                color: passwordInput.activeFocus ? Qt.alpha(root.accentColor, 0.28) : root.glassBg
-                border.color: passwordInput.activeFocus ? root.accentColor : root.glassBorder
-                border.width: 1.5 * s
+            Item {
+                id: loginContentInner
+                readonly property real pwBoxW: 280 * s
+                readonly property real pwBoxH: 52 * s
+                readonly property real avatarSize: 80 * s
+                readonly property bool isTop: root.avatarOrientation === "Top Center" || root.avatarOrientation === "Top Left" || root.avatarOrientation === "Top Right"
 
-                property real pressBloom: 0.0
+                width: (root.avatarOrientation === "Right" || root.avatarOrientation === "Left") ? (pwBoxW + 20 * s + avatarSize) : pwBoxW
+                height: isTop ? (avatarSize + 14 * s + pwBoxH + 28 * s) : Math.max(avatarSize, 30 * s + pwBoxH + 26 * s)
 
-                layer.enabled: true
-                layer.effect: DropShadow {
-                    color: passwordInput.activeFocus ? root.highlightGlow : "#50000000"
-                    radius: passwordInput.activeFocus ? 18 : 10
-                    samples: 16
-                }
+                // Username display with Accent Dot
+                Row {
+                    id: userDisplayNameRow
+                    spacing: 8 * s
+                    x: {
+                        if (root.avatarOrientation === "Top Center") return (loginContentInner.pwBoxW - width) / 2
+                        if (root.avatarOrientation === "Top Left") return loginContentInner.avatarSize + 14 * s
+                        if (root.avatarOrientation === "Top Right") return Math.max(0, loginContentInner.pwBoxW - loginContentInner.avatarSize - 14 * s - width)
+                        if (root.avatarOrientation === "Left") return loginContentInner.avatarSize + 20 * s
+                        return 0
+                    }
+                    y: {
+                        if (root.avatarOrientation === "Top Left" || root.avatarOrientation === "Top Right") {
+                            return (loginContentInner.avatarSize - height) / 2
+                        }
+                        return Math.max(0, passwordBoxRect.y - height - 6 * s)
+                    }
 
-                Behavior on radius { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
-                Behavior on color { ColorAnimation { duration: 250 } }
-                Behavior on border.color { ColorAnimation { duration: 250 } }
+                    Behavior on x { NumberAnimation { duration: 350; easing.type: Easing.OutCubic } }
+                    Behavior on y { NumberAnimation { duration: 350; easing.type: Easing.OutCubic } }
 
-                NumberAnimation {
-                    id: bloomAnim
-                    target: passwordBoxRect
-                    property: "pressBloom"
-                    from: 0.50
-                    to: 0.0
-                    duration: 350
-                    easing.type: Easing.OutQuad
-                }
-
-                // Inner Pill-Conforming Glow (Always 100% matched to pill radius, zero rectangular clipping!)
-                Rectangle {
-                    anchors.fill: parent
-                    radius: parent.radius
-                    color: Qt.alpha(root.accentColor, 0.35)
-                    opacity: passwordBoxRect.pressBloom
-                    visible: opacity > 0
-                }
-
-                // Lock Icon with Fixed Safe Bounds
-                Item {
-                    id: lockIconContainer
-                    width: 28 * s
-                    height: parent.height
-                    anchors.left: parent.left
-                    anchors.leftMargin: 12 * s
+                    Rectangle {
+                        width: 6 * s
+                        height: 6 * s
+                        radius: 3 * s
+                        color: root.accentColor
+                        anchors.verticalCenter: parent.verticalCenter
+                        Behavior on color { ColorAnimation { duration: 250 } }
+                    }
 
                     Text {
-                        id: lockIcon
-                        anchors.centerIn: parent
-                        text: "󰌾"
-                        font.family: root.monoFont
+                        id: userDisplayName
+                        text: root.activeUser.realName
+                        color: root.textPrimary
+                        font.family: root.sansFont
                         font.pixelSize: 16 * s
-                        color: passwordInput.activeFocus ? root.accentColor : root.textMuted
-                        scale: passwordInput.activeFocus ? 1.15 : 1.0
-
-                        Behavior on color { ColorAnimation { duration: 200 } }
-                        Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+                        font.weight: Font.Bold
+                        font.letterSpacing: 0.5 * s
                     }
                 }
 
-                // Dedicated Text Input Region (Starts strictly AFTER lockIconContainer)
-                Item {
-                    anchors.left: lockIconContainer.right
-                    anchors.leftMargin: 8 * s
-                    anchors.right: submitArrow.left
-                    anchors.rightMargin: 8 * s
-                    anchors.top: parent.top
-                    anchors.bottom: parent.bottom
-                    visible: !root.isLoggingIn
-                    clip: true
+                // ─── Themed Glass Password Box (4 Box Styles + Fixed Typing Pool) ───
+                Rectangle {
+                    id: passwordBoxRect
+                    x: {
+                        if (root.avatarOrientation === "Left") return loginContentInner.avatarSize + 20 * s
+                        return 0
+                    }
+                    y: {
+                        if (loginContentInner.isTop) return loginContentInner.avatarSize + 14 * s
+                        return 28 * s
+                    }
+                    width: loginContentInner.pwBoxW
+                    height: loginContentInner.pwBoxH
+                    radius: root.getBoxRadius(height)
+                    color: root.boxStyle === "Minimal Underline" ? Qt.alpha(root.glassBg, 0.30) : (passwordInput.activeFocus ? Qt.alpha(root.accentColor, 0.28) : root.glassBg)
+                    border.color: root.boxStyle === "Minimal Underline" ? "transparent" : (passwordInput.activeFocus ? root.accentColor : root.glassBorder)
+                    border.width: root.boxStyle === "Minimal Underline" ? 0 : 1.5 * s
 
-                    TextInput {
-                        id: passwordInput
+                    property real pressBloom: 0.0
+
+                    layer.enabled: true
+                    layer.effect: DropShadow {
+                        color: passwordInput.activeFocus ? root.highlightGlow : "#50000000"
+                        radius: passwordInput.activeFocus ? 18 : 10
+                        samples: 16
+                    }
+
+                    Behavior on x { NumberAnimation { duration: 350; easing.type: Easing.OutCubic } }
+                    Behavior on y { NumberAnimation { duration: 350; easing.type: Easing.OutCubic } }
+                    Behavior on radius { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
+                    Behavior on color { ColorAnimation { duration: 250 } }
+                    Behavior on border.color { ColorAnimation { duration: 250 } }
+
+                    NumberAnimation {
+                        id: bloomAnim
+                        target: passwordBoxRect
+                        property: "pressBloom"
+                        from: 0.50
+                        to: 0.0
+                        duration: 350
+                        easing.type: Easing.OutQuad
+                    }
+
+                    // Inner Pill-Conforming Glow (Always matched to pill radius, zero rectangular clipping!)
+                    Rectangle {
                         anchors.fill: parent
-                        color: "transparent"
-                        echoMode: TextInput.NoEcho
-                        font.family: root.monoFont
-                        font.pixelSize: 14 * s
-                        focus: root.isUnlocked
-                        clip: true
-                        cursorVisible: false
-                        cursorDelegate: Item { width: 0; height: 0 }
+                        radius: parent.radius
+                        color: Qt.alpha(root.accentColor, 0.35)
+                        opacity: passwordBoxRect.pressBloom
+                        visible: opacity > 0
+                    }
 
-                        onTextEdited: errorText.text = ""
-                        Keys.onReturnPressed: doLogin()
-                        Keys.onEnterPressed: doLogin()
-                        Keys.onEscapePressed: function(event) {
-                            handleEscape()
-                            event.accepted = true
-                        }
+                    // Minimal Underline glowing bar
+                    Rectangle {
+                        anchors.bottom: parent.bottom
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        height: passwordInput.activeFocus ? 2.5 * s : 1.5 * s
+                        radius: 1 * s
+                        color: passwordInput.activeFocus ? root.accentColor : Qt.alpha(root.glassBorder, 0.65)
+                        visible: root.boxStyle === "Minimal Underline"
+                        Behavior on color { ColorAnimation { duration: 250 } }
+                    }
 
-                        // Elegant M3 Shape Password Dots (Permanent Fixed Pool - Zero Refresh / Zero Flash!)
-                        Row {
+                    // Split Badge circular badge
+                    Rectangle {
+                        id: lockBadgeCircle
+                        width: parent.height - 10 * s
+                        height: width
+                        radius: width / 2
+                        anchors.left: parent.left
+                        anchors.leftMargin: 5 * s
+                        anchors.verticalCenter: parent.verticalCenter
+                        color: passwordInput.activeFocus ? Qt.alpha(root.accentColor, 0.40) : Qt.alpha(root.accentColor, 0.15)
+                        border.color: root.accentColor
+                        border.width: 1.5 * s
+                        visible: root.boxStyle === "Split Badge"
+                        Behavior on color { ColorAnimation { duration: 200 } }
+                    }
+
+                    // Lock Icon with Fixed Safe Bounds
+                    Item {
+                        id: lockIconContainer
+                        width: root.boxStyle === "Split Badge" ? (parent.height - 10 * s) : (28 * s)
+                        height: parent.height
+                        anchors.left: parent.left
+                        anchors.leftMargin: root.boxStyle === "Split Badge" ? 5 * s : 12 * s
+
+                        Text {
+                            id: lockIcon
                             anchors.centerIn: parent
-                            spacing: 6 * s
-                            visible: passwordInput.text.length > 0
-                            opacity: passwordInput.text.length > 0 ? 1 : 0
-                            Behavior on opacity { NumberAnimation { duration: 120 } }
+                            text: "󰌾"
+                            font.family: root.monoFont
+                            font.pixelSize: 16 * s
+                            color: passwordInput.activeFocus ? root.accentColor : root.textMuted
+                            scale: passwordInput.activeFocus ? 1.15 : 1.0
 
-                            Repeater {
-                                id: dotsRepeater
-                                model: 24 // Fixed pool of 24 characters: NEVER re-created, NEVER flashes!
-                                delegate: Item {
-                                    id: dotItem
-                                    readonly property bool isShown: index < passwordInput.text.length
-                                    visible: isShown || scale > 0.05
-                                    width: isShown ? 12 * s : 0
-                                    height: 12 * s
+                            Behavior on color { ColorAnimation { duration: 200 } }
+                            Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+                        }
+                    }
+
+                    // Dedicated Text Input Region (Starts strictly AFTER lockIconContainer)
+                    Item {
+                        anchors.left: lockIconContainer.right
+                        anchors.leftMargin: 8 * s
+                        anchors.right: submitArrow.left
+                        anchors.rightMargin: 8 * s
+                        anchors.top: parent.top
+                        anchors.bottom: parent.bottom
+                        visible: !root.isLoggingIn
+                        clip: true
+
+                        TextInput {
+                            id: passwordInput
+                            anchors.fill: parent
+                            verticalAlignment: TextInput.AlignVCenter
+                            echoMode: TextInput.Normal
+                            color: "transparent"
+                            font.family: root.sansFont
+                            font.pixelSize: 14 * s
+                            font.letterSpacing: 2 * s
+                            cursorVisible: false
+                            focus: true
+
+                            onTextChanged: {
+                                errorText.text = ""
+                            }
+
+                            onAccepted: doLogin()
+
+                            Text {
+                                anchors.left: parent.left
+                                anchors.leftMargin: 4 * s
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: "Password..."
+                                color: root.textMuted
+                                font.family: root.sansFont
+                                font.pixelSize: 13 * s
+                                visible: passwordInput.text.length === 0
+                                opacity: 0.65
+                            }
+
+                            // Pre-allocated Fixed Pool of 24 Animated Dots (Zero lifecycle flicker!)
+                            Row {
+                                id: dotsContainer
+                                anchors.left: parent.left
+                                anchors.leftMargin: 4 * s
+                                anchors.verticalCenter: parent.verticalCenter
+                                spacing: 4 * s
+
+                                Repeater {
+                                    id: dotsRepeater
+                                    model: 24
+
+                                    Item {
+                                        id: dotWrapper
+                                        property bool isShown: index < passwordInput.text.length
+                                        width: isShown ? 12 * s : 0
+                                        height: 12 * s
+                                        visible: width > 0
+
+                                        Behavior on width {
+                                            NumberAnimation { duration: 180; easing.type: Easing.OutBack }
+                                        }
+
+                                        MaterialShape {
+                                            anchors.centerIn: parent
+                                            width: 10 * s
+                                            height: 10 * s
+                                            shape: root.passwordM3Shapes[index % root.passwordM3Shapes.length]
+                                            color: root.accentColor
+                                            scale: dotWrapper.isShown ? 1.0 : 0.0
+
+                                            Behavior on scale {
+                                                NumberAnimation { duration: 200; easing.type: Easing.OutBack }
+                                            }
+                                            Behavior on color {
+                                                ColorAnimation { duration: 200 }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // Pulsing Glowing Cursor Dot
+                                Item {
+                                    id: cursorPill
+                                    width: 8 * s
+                                    height: 8 * s
                                     anchors.verticalCenter: parent.verticalCenter
+                                    visible: passwordInput.activeFocus
 
-                                    Behavior on width {
-                                        NumberAnimation { duration: 140; easing.type: Easing.OutCubic }
-                                    }
-
-                                    // Each character typed has a permanent distinct M3 shape
-                                    MaterialShape {
+                                    Rectangle {
                                         anchors.fill: parent
-                                        shape: root.passwordM3Shapes[index % root.passwordM3Shapes.length]
-                                        color: "#ffffff"
-                                        animationDuration: 0
-                                    }
+                                        radius: 4 * s
+                                        color: root.accentColor
+                                        opacity: 0.9
 
-                                    scale: isShown ? 1.0 : 0.0
-                                    rotation: isShown ? 0 : -25
-                                    opacity: isShown ? 1.0 : 0.0
-
-                                    Behavior on scale {
-                                        NumberAnimation { duration: 150; easing.type: Easing.OutBack; easing.overshoot: 1.15 }
-                                    }
-                                    Behavior on rotation {
-                                        NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
-                                    }
-                                    Behavior on opacity {
-                                        NumberAnimation { duration: 100 }
+                                        SequentialAnimation on opacity {
+                                            loops: Animation.Infinite
+                                            running: passwordInput.activeFocus
+                                            NumberAnimation { from: 0.9; to: 0.2; duration: 550; easing.type: Easing.InOutQuad }
+                                            NumberAnimation { from: 0.2; to: 0.9; duration: 550; easing.type: Easing.InOutQuad }
+                                        }
                                     }
                                 }
                             }
                         }
+                    }
 
-                        // Clean Centered Placeholder Text (Zero Overlap! No animation on top!)
+                    // Click Bloom Feedback (Zero Frame Overflow!)
+                    MouseArea {
+                        id: boxPressMa
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.IBeamCursor
+                        z: -1
+                        onPressed: {
+                            passwordInput.forceActiveFocus()
+                            bloomAnim.restart()
+                        }
+                    }
+
+                    // Spinner while logging in
+                    Item {
+                        id: spinnerItem
+                        width: 24 * s
+                        height: 24 * s
+                        anchors.centerIn: parent
+                        visible: root.isLoggingIn
+
                         Text {
                             anchors.centerIn: parent
-                            text: "Enter your password"
-                            color: root.textMuted
-                            font.family: root.sansFont
-                            font.pixelSize: 13 * s
-                            font.letterSpacing: 0.5 * s
-                            opacity: passwordInput.text.length === 0 ? 1 : 0
-                            visible: opacity > 0
+                            text: "󰑮"
+                            font.family: root.monoFont
+                            font.pixelSize: 18 * s
+                            color: root.accentColor
 
-                            Behavior on opacity { NumberAnimation { duration: 150 } }
-                        }
-
-                        MouseArea {
-                            id: boxPressMa
-                            anchors.fill: parent
-                            cursorShape: Qt.IBeamCursor
-                            onPressed: function(mouse) {
-                                bloomAnim.restart()
-                                passwordInput.forceActiveFocus()
+                            RotationAnimator on rotation {
+                                from: 0
+                                to: 360
+                                duration: 800
+                                loops: Animation.Infinite
+                                running: root.isLoggingIn
                             }
                         }
                     }
-                }
 
-                // Logging In State
-                Row {
-                    anchors.centerIn: parent
-                    spacing: 8 * s
-                    visible: root.isLoggingIn
-
-                    Text {
-                        text: "Authenticating..."
-                        color: root.textPrimary
-                        font.family: root.sansFont
-                        font.pixelSize: 13 * s
-                        font.weight: Font.Medium
+                    // Submit Action Arrow Pill
+                    Rectangle {
+                        id: submitArrow
+                        width: 34 * s
+                        height: 34 * s
+                        radius: root.getBoxRadius(height)
+                        anchors.right: parent.right
+                        anchors.rightMargin: 8 * s
                         anchors.verticalCenter: parent.verticalCenter
-                    }
+                        color: passwordInput.text.length > 0 ? root.accentColor : (submitMa.containsMouse ? Qt.alpha(root.accentColor, 0.25) : Qt.rgba(1, 1, 1, 0.08))
+                        scale: submitMa.pressed ? 0.92 : (passwordInput.text.length > 0 ? 1.05 : 1.0)
+                        visible: !root.isLoggingIn
 
-                    Text {
-                        id: loginSpinner
-                        text: "󰑮"
-                        font.family: root.monoFont
-                        font.pixelSize: 16 * s
-                        color: root.accentColor
-                        anchors.verticalCenter: parent.verticalCenter
+                        Behavior on color { ColorAnimation { duration: 200 } }
+                        Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
 
-                        NumberAnimation {
-                            target: loginSpinner
-                            property: "rotation"
-                            from: 0
-                            to: 360
-                            duration: 900
-                            loops: Animation.Infinite
-                            running: root.isLoggingIn
+                        Text {
+                            anchors.centerIn: parent
+                            text: "󰁔"
+                            font.family: root.monoFont
+                            font.pixelSize: 14 * s
+                            color: passwordInput.text.length > 0 ? "#ffffff" : (submitMa.containsMouse ? "#ffffff" : root.textMuted)
+                        }
+
+                        MouseArea {
+                            id: submitMa
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: doLogin()
                         }
                     }
                 }
 
-                // Themed Submit Arrow Button
-                Rectangle {
-                    id: submitArrow
-                    width: 34 * s
-                    height: 34 * s
-                    radius: root.getBoxRadius(height)
-                    anchors.right: parent.right
-                    anchors.rightMargin: 8 * s
-                    anchors.verticalCenter: parent.verticalCenter
-                    color: passwordInput.text.length > 0 ? root.accentColor : (submitMa.containsMouse ? Qt.alpha(root.accentColor, 0.25) : Qt.rgba(1, 1, 1, 0.08))
-                    scale: submitMa.pressed ? 0.92 : (passwordInput.text.length > 0 ? 1.05 : 1.0)
-                    visible: !root.isLoggingIn
-
-                    Behavior on color { ColorAnimation { duration: 200 } }
-                    Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "󰁔"
-                        font.family: root.monoFont
-                        font.pixelSize: 14 * s
-                        color: passwordInput.text.length > 0 ? "#ffffff" : (submitMa.containsMouse ? "#ffffff" : root.textMuted)
-                    }
-
-                    MouseArea {
-                        id: submitMa
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: doLogin()
-                    }
-                }
-            }
-
-            // ─── Real Morphing MaterialShape Avatar Frame (Click to open User Menu!) ───
-            Item {
-                id: avatarFrame
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                width: 82 * s
-                height: 82 * s
-                scale: avatarMa.containsMouse ? 1.05 : 1.0
-                Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutBack } }
-
-                MaterialShape {
-                    id: avatarM3Mask
-                    anchors.fill: parent
-                    shape: root.currentM3Shape
-                    animationDuration: 350
-                    color: "#ffffff"
-                    visible: false
-                }
-
-                MaterialShape {
-                    id: avatarM3Border
-                    anchors.fill: parent
-                    shape: root.currentM3Shape
-                    animationDuration: 350
-                    color: avatarMa.containsMouse ? root.accentColor : Qt.alpha(root.accentColor, 0.40)
-                    Behavior on color { ColorAnimation { duration: 200 } }
-                }
-
+                // ─── Real Morphing MaterialShape Avatar Frame (Click to open User Menu!) ───
                 Item {
-                    anchors.fill: parent
-                    anchors.margins: 3 * s
-
-                    Image {
-                        id: userFaceImg
-                        anchors.fill: parent
-                        source: root.activeUser.icon !== "" ? root.activeUser.icon : "file:///home/" + root.activeUser.name + "/.face"
-                        cache: false
-                        fillMode: Image.PreserveAspectCrop
-                        smooth: true
-                        mipmap: true
-                        visible: false
+                    id: avatarFrame
+                    x: {
+                        if (root.avatarOrientation === "Left") return 0
+                        if (root.avatarOrientation === "Right") return loginContentInner.pwBoxW + 20 * s
+                        if (root.avatarOrientation === "Top Center") return (loginContentInner.pwBoxW - width) / 2
+                        if (root.avatarOrientation === "Top Left") return 0
+                        if (root.avatarOrientation === "Top Right") return loginContentInner.pwBoxW - width
+                        return loginContentInner.pwBoxW + 20 * s
                     }
+                    y: {
+                        if (root.avatarOrientation === "Right" || root.avatarOrientation === "Left") {
+                            return passwordBoxRect.y + (loginContentInner.pwBoxH - height) / 2
+                        }
+                        return 0
+                    }
+                    width: loginContentInner.avatarSize
+                    height: loginContentInner.avatarSize
+                    scale: avatarMa.containsMouse ? 1.05 : 1.0
 
-                    MaterialShape {
-                        id: innerFaceMask
+                    Behavior on x { NumberAnimation { duration: 350; easing.type: Easing.OutCubic } }
+                    Behavior on y { NumberAnimation { duration: 350; easing.type: Easing.OutCubic } }
+                    Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutBack } }
+
+                                        MaterialShape {
+                        id: avatarM3Mask
                         anchors.fill: parent
                         shape: root.currentM3Shape
                         animationDuration: 350
@@ -875,75 +1261,109 @@ Rectangle {
                         visible: false
                     }
 
-                    OpacityMask {
+                    MaterialShape {
+                        id: avatarM3Border
                         anchors.fill: parent
-                        source: userFaceImg
-                        maskSource: innerFaceMask
-                        visible: userFaceImg.status === Image.Ready
+                        shape: root.currentM3Shape
+                        animationDuration: 350
+                        color: avatarMa.containsMouse ? root.accentColor : Qt.alpha(root.accentColor, 0.40)
+                        Behavior on color { ColorAnimation { duration: 200 } }
                     }
+
+                    Item {
+                        anchors.fill: parent
+                        anchors.margins: 3 * s
+
+                        Image {
+                            id: userFaceImg
+                            anchors.fill: parent
+                            source: root.activeUser.icon !== "" ? root.activeUser.icon : "file:///home/" + root.activeUser.name + "/.face"
+                            cache: false
+                            fillMode: Image.PreserveAspectCrop
+                            smooth: true
+                            mipmap: true
+                            visible: false
+                        }
+
+                        MaterialShape {
+                            id: innerFaceMask
+                            anchors.fill: parent
+                            shape: root.currentM3Shape
+                            animationDuration: 350
+                            color: "#ffffff"
+                            visible: false
+                        }
+
+                        OpacityMask {
+                            anchors.fill: parent
+                            source: userFaceImg
+                            maskSource: innerFaceMask
+                            visible: userFaceImg.status === Image.Ready
+                        }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: ""
+                            font.family: root.monoFont
+                            font.pixelSize: 32 * s
+                            color: root.textPrimary
+                            visible: userFaceImg.status !== Image.Ready
+                        }
+                    }
+
+                    MouseArea {
+                        id: avatarMa
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            root.userListOpen = !root.userListOpen
+                            root.sessionMenuOpen = false
+                            root.settingsOpen = false
+                            root.powerMenuOpen = false
+                        }
+                    }
+                }
+
+                // Caps Lock Warning Row
+                Row {
+                    anchors.left: passwordBoxRect.left
+                    anchors.top: passwordBoxRect.bottom
+                    anchors.topMargin: 8 * s
+                    spacing: 6 * s
+                    visible: root.capsLock && errorText.text === ""
 
                     Text {
-                        anchors.centerIn: parent
-                        text: ""
+                        text: "󰌌"
                         font.family: root.monoFont
-                        font.pixelSize: 32 * s
-                        color: root.textPrimary
-                        visible: userFaceImg.status !== Image.Ready
+                        font.pixelSize: 12 * s
+                        color: "#f5a623"
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                    Text {
+                        text: "Caps lock is ON"
+                        font.family: root.sansFont
+                        font.pixelSize: 11 * s
+                        font.weight: Font.Medium
+                        color: "#f5a623"
+                        anchors.verticalCenter: parent.verticalCenter
                     }
                 }
 
-                MouseArea {
-                    id: avatarMa
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        root.userListOpen = !root.userListOpen
-                        root.sessionMenuOpen = false
-                        root.settingsOpen = false
-                        root.powerMenuOpen = false
-                    }
-                }
-            }
-
-            // Caps Lock Warning Row
-            Row {
-                anchors.right: passwordBoxRect.right
-                anchors.top: passwordBoxRect.bottom
-                anchors.topMargin: 8 * s
-                spacing: 6 * s
-                visible: root.capsLock && errorText.text === ""
-
+                // Error Message
                 Text {
-                    text: "󰌌"
-                    font.family: root.monoFont
-                    font.pixelSize: 12 * s
-                    color: "#f5a623"
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-                Text {
-                    text: "Caps lock is ON"
+                    id: errorText
+                    anchors.left: passwordBoxRect.left
+                    anchors.top: passwordBoxRect.bottom
+                    anchors.topMargin: 8 * s
+                    text: ""
+                    color: root.accentColor
                     font.family: root.sansFont
-                    font.pixelSize: 11 * s
-                    font.weight: Font.Medium
-                    color: "#f5a623"
-                    anchors.verticalCenter: parent.verticalCenter
+                    font.pixelSize: 12 * s
+                    font.weight: Font.Bold
+                    font.letterSpacing: 1 * s
+                    Behavior on color { ColorAnimation { duration: 250 } }
                 }
-            }
-
-            // Error Message
-            Text {
-                id: errorText
-                anchors.right: passwordBoxRect.right
-                anchors.top: passwordBoxRect.bottom
-                anchors.topMargin: 8 * s
-                text: ""
-                color: root.accentColor
-                font.family: root.sansFont
-                font.pixelSize: 12 * s
-                font.weight: Font.Bold
-                font.letterSpacing: 1 * s
-                Behavior on color { ColorAnimation { duration: 250 } }
             }
         }
     }
@@ -953,8 +1373,11 @@ Rectangle {
     // ──────────────────────────────────────────
     Rectangle {
         id: userSwitcherModal
-        anchors.right: loginPanelContainer.right
-        anchors.bottom: loginPanelContainer.top
+        anchors.left: (loginPanelContainer.x < 200 * s) ? loginPanelContainer.left : undefined
+        anchors.right: (loginPanelContainer.x < 200 * s) ? undefined : loginPanelContainer.right
+        anchors.top: (loginPanelContainer.y < 250 * s) ? loginPanelContainer.bottom : undefined
+        anchors.bottom: (loginPanelContainer.y < 250 * s) ? undefined : loginPanelContainer.top
+        anchors.topMargin: 10 * s
         anchors.bottomMargin: 10 * s
         width: 260 * s
         height: root.userListOpen ? (46 * s + root.mockUserList.length * 44 * s) : 0
@@ -1334,6 +1757,7 @@ Rectangle {
                             anchors.fill: parent
                             clip: true
                             model: [
+                                { name: "Triangle",        shape: MaterialShape.Triangle },
                                 { name: "Cookie 9-Sided", shape: MaterialShape.Cookie9Sided },
                                 { name: "Clamshell",      shape: MaterialShape.ClamShell },
                                 { name: "Cookie 4-Sided", shape: MaterialShape.Cookie4Sided },
@@ -1871,36 +2295,92 @@ Rectangle {
             }
         }
 
-        // ─── Session Flyout Picker (Opens above Session Pill!) ───
+        // ─── Morphing Session Pill-to-Menu Container (Kinetic Button-to-Menu Transformation!) ───
         Rectangle {
-            id: sessionMenuModal
-            anchors.left: sessionPill.left
-            anchors.bottom: sessionPill.top
-            anchors.bottomMargin: 10 * s
-            width: 230 * s
-            height: root.sessionMenuOpen ? (46 * s + root.mockSessionList.length * 40 * s) : 0
-            radius: 16 * s
-            color: root.glassBg
-            border.color: root.glassBorder
+            id: morphingSessionContainer
+            anchors.left: morphingSettingsContainer.right
+            anchors.leftMargin: 10 * s
+            anchors.bottom: parent.bottom
+            width: root.sessionMenuOpen ? 240 * s : (sessionRow.implicitWidth + 24 * s)
+            height: root.sessionMenuOpen ? (48 * s + root.mockSessionList.length * 40 * s) : 38 * s
+            radius: root.sessionMenuOpen ? 18 * s : 12 * s
+            color: root.sessionMenuOpen ? root.glassBg : (sessArea.containsMouse ? Qt.alpha(root.accentColor, 0.28) : root.glassBg)
+            border.color: root.sessionMenuOpen ? root.glassBorder : (sessArea.containsMouse ? root.accentColor : root.glassBorder)
             border.width: 1 * s
             clip: true
-            visible: root.sessionMenuOpen
-            opacity: root.sessionMenuOpen ? 1 : 0
-            z: 60
+            opacity: root.settingsOpen ? 0 : 1
+            visible: opacity > 0
+            z: 50
 
             layer.enabled: true
-            layer.effect: DropShadow { color: "#50000000"; radius: 20; samples: 16 }
+            layer.effect: DropShadow { color: "#50000000"; radius: root.sessionMenuOpen ? 20 : 10; samples: 16 }
 
+            Behavior on width { NumberAnimation { duration: 320; easing.type: Easing.OutCubic } }
             Behavior on height { NumberAnimation { duration: 320; easing.type: Easing.OutCubic } }
-            Behavior on opacity { NumberAnimation { duration: 220 } }
+            Behavior on radius { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
+            Behavior on opacity { NumberAnimation { duration: 180 } }
             Behavior on color { ColorAnimation { duration: 250 } }
             Behavior on border.color { ColorAnimation { duration: 250 } }
 
+            // Collapsed State: Compact Session Pill Button
+            Item {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                height: 38 * s
+                visible: !root.sessionMenuOpen
+                opacity: root.sessionMenuOpen ? 0 : 1
+                Behavior on opacity { NumberAnimation { duration: 150 } }
+
+                Row {
+                    id: sessionRow
+                    anchors.centerIn: parent
+                    spacing: 8 * s
+
+                    Text {
+                        text: root.activeSession.icon
+                        font.family: root.monoFont
+                        font.pixelSize: 15 * s
+                        color: root.accentColor
+                        anchors.verticalCenter: parent.verticalCenter
+                        Behavior on color { ColorAnimation { duration: 250 } }
+                    }
+
+                    Text {
+                        id: sessionNameLabel
+                        text: root.activeSession.name.split(" ")[0]
+                        color: root.textSecondary
+                        font.family: root.sansFont
+                        font.pixelSize: 13 * s
+                        font.weight: Font.Medium
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                }
+
+                MouseArea {
+                    id: sessArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        root.sessionMenuOpen = true
+                        root.userListOpen = false
+                        root.settingsOpen = false
+                        root.powerMenuOpen = false
+                    }
+                }
+            }
+
+            // Expanded State: Session Picker Menu Card with Staggered Items
             Column {
                 anchors.fill: parent
                 anchors.margins: 10 * s
                 spacing: 4 * s
+                visible: root.sessionMenuOpen
+                opacity: root.sessionMenuOpen ? 1 : 0
+                Behavior on opacity { NumberAnimation { duration: 200 } }
 
+                // Header
                 Item {
                     width: parent.width
                     height: 24 * s
@@ -1932,6 +2412,7 @@ Rectangle {
                     }
                 }
 
+                // Session Items
                 Repeater {
                     model: root.mockSessionList
                     delegate: Rectangle {
@@ -1988,64 +2469,6 @@ Rectangle {
                             }
                         }
                     }
-                }
-            }
-        }
-
-        // Left: Session Pill (Click to open Session Menu!)
-        Rectangle {
-            id: sessionPill
-            anchors.left: morphingSettingsContainer.right
-            anchors.leftMargin: 10 * s
-            anchors.bottom: parent.bottom
-            height: 38 * s
-            width: sessionRow.implicitWidth + 24 * s
-            radius: 12 * s
-            color: sessArea.containsMouse ? Qt.alpha(root.accentColor, 0.28) : root.glassBg
-            border.color: sessArea.containsMouse ? root.accentColor : root.glassBorder
-            border.width: 1 * s
-            opacity: root.settingsOpen ? 0 : 1
-            visible: opacity > 0
-            Behavior on opacity { NumberAnimation { duration: 180 } }
-
-            Behavior on color { ColorAnimation { duration: 250 } }
-            Behavior on border.color { ColorAnimation { duration: 250 } }
-
-            Row {
-                id: sessionRow
-                anchors.centerIn: parent
-                spacing: 8 * s
-
-                Text {
-                    text: root.activeSession.icon
-                    font.family: root.monoFont
-                    font.pixelSize: 15 * s
-                    color: root.accentColor
-                    anchors.verticalCenter: parent.verticalCenter
-                    Behavior on color { ColorAnimation { duration: 250 } }
-                }
-
-                Text {
-                    id: sessionNameLabel
-                    text: root.activeSession.name.split(" ")[0]
-                    color: root.textSecondary
-                    font.family: root.sansFont
-                    font.pixelSize: 13 * s
-                    font.weight: Font.Medium
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-            }
-
-            MouseArea {
-                id: sessArea
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: {
-                    root.sessionMenuOpen = !root.sessionMenuOpen
-                    root.userListOpen = false
-                    root.settingsOpen = false
-                    root.powerMenuOpen = false
                 }
             }
         }
