@@ -513,26 +513,42 @@ Rectangle {
             Behavior on opacity { NumberAnimation { duration: 600; easing.type: Easing.OutCubic } }
         }
 
-    // Ambient floating M3 geometric background shapes (Lissajous organic float field)
+    // Ambient floating M3 geometric background shapes (Balanced Everywhere Layout)
     Item {
         id: ambientShapesContainer
         anchors.fill: parent
         visible: root.showLavaBlobs
-        opacity: root.isUnlocked ? 0.72 : 0.42
+        opacity: root.isUnlocked ? 0.65 : 0.38
         Behavior on opacity { NumberAnimation { duration: 650; easing.type: Easing.OutCubic } }
 
         Repeater {
             model: [
-                { shape: MaterialShape.Triangle,     xRatio: 0.12, yRatio: 0.18, dx: 110, dy: 130, sz: 170, alpha: 0.32, rotT: 28000, xT: 13000, yT: 17000 },
-                { shape: MaterialShape.Cookie9Sided, xRatio: 0.78, yRatio: 0.14, dx: -130, dy: 110, sz: 230, alpha: 0.22, rotT: 34000, xT: 19000, yT: 14000 },
-                { shape: MaterialShape.Diamond,      xRatio: 0.48, yRatio: 0.72, dx: 120, dy: -100, sz: 140, alpha: 0.30, rotT: 24000, xT: 15000, yT: 21000 },
-                { shape: MaterialShape.Sunny,        xRatio: 0.86, yRatio: 0.78, dx: -100, dy: -120, sz: 200, alpha: 0.24, rotT: 32000, xT: 17000, yT: 13000 },
-                { shape: MaterialShape.Cookie4Sided, xRatio: 0.08, yRatio: 0.76, dx: 100, dy: -90, sz: 160, alpha: 0.28, rotT: 26000, xT: 16000, yT: 20000 },
-                { shape: MaterialShape.Flower,       xRatio: 0.32, yRatio: 0.28, dx: -90, dy: 110, sz: 130, alpha: 0.26, rotT: 30000, xT: 14000, yT: 18000 },
-                { shape: MaterialShape.ClamShell,    xRatio: 0.64, yRatio: 0.38, dx: 100, dy: 90, sz: 150, alpha: 0.26, rotT: 29000, xT: 18000, yT: 15000 },
-                { shape: MaterialShape.Ghostish,     xRatio: 0.22, yRatio: 0.88, dx: 80, dy: -80, sz: 110, alpha: 0.30, rotT: 22000, xT: 12000, yT: 16000 },
-                { shape: MaterialShape.VerySunny,    xRatio: 0.92, yRatio: 0.44, dx: -110, dy: 100, sz: 180, alpha: 0.24, rotT: 36000, xT: 20000, yT: 15000 },
-                { shape: MaterialShape.Heart,        xRatio: 0.40, yRatio: 0.85, dx: 90, dy: -90, sz: 120, alpha: 0.28, rotT: 25000, xT: 15000, yT: 19000 }
+                // 1. Far Top-Left Corner (Outer Sky)
+                { shape: MaterialShape.Triangle,     xRatio: 0.06, yRatio: 0.12, dx: 30, riseY: 130, sz: 105, alpha: 0.28, rotT: 38000, riseT: 20000, swayT: 13000 },
+
+                // 2. Top-Center High Sky (Above Hair)
+                { shape: MaterialShape.Diamond,      xRatio: 0.42, yRatio: 0.08, dx: -25, riseY: 110, sz: 90,  alpha: 0.26, rotT: 34000, riseT: 18000, swayT: 12000 },
+
+                // 3. Top-Right Upper Sky (Above Moon)
+                { shape: MaterialShape.Cookie9Sided, xRatio: 0.72, yRatio: 0.12, dx: -35, riseY: 140, sz: 120, alpha: 0.24, rotT: 44000, riseT: 24000, swayT: 16000 },
+
+                // 4. Far-Right Upper Edge
+                { shape: MaterialShape.Sunny,        xRatio: 0.91, yRatio: 0.32, dx: -30, riseY: 120, sz: 110, alpha: 0.25, rotT: 40000, riseT: 22000, swayT: 14000 },
+
+                // 5. Mid-Left Outer Edge (Far Left Border)
+                { shape: MaterialShape.Flower,       xRatio: 0.05, yRatio: 0.46, dx: 25,  riseY: 120, sz: 100, alpha: 0.26, rotT: 36000, riseT: 19000, swayT: 13000 },
+
+                // 6. Mid-Right Ambient Space (Between User & Right Edge)
+                { shape: MaterialShape.ClamShell,    xRatio: 0.68, yRatio: 0.58, dx: 35,  riseY: 130, sz: 115, alpha: 0.24, rotT: 42000, riseT: 23000, swayT: 15000 },
+
+                // 7. Bottom-Left Corner (Under Arm)
+                { shape: MaterialShape.Cookie4Sided, xRatio: 0.08, yRatio: 0.85, dx: 30,  riseY: 120, sz: 110, alpha: 0.26, rotT: 38000, riseT: 21000, swayT: 14000 },
+
+                // 8. Bottom-Center Floor
+                { shape: MaterialShape.Heart,        xRatio: 0.50, yRatio: 0.88, dx: -25, riseY: 100, sz: 95,  alpha: 0.28, rotT: 32000, riseT: 17000, swayT: 11000 },
+
+                // 9. Far Bottom-Right Corner
+                { shape: MaterialShape.VerySunny,    xRatio: 0.88, yRatio: 0.84, dx: -30, riseY: 130, sz: 115, alpha: 0.25, rotT: 42000, riseT: 22000, swayT: 15000 }
             ]
 
             delegate: Item {
@@ -555,7 +571,27 @@ Rectangle {
                     animationDuration: 1200
                 }
 
-                // Smooth organic Lissajous Drift: Independent X and Y loops
+                // Fluid Lava Lamp Motion: Gentle Vertical Drift
+                SequentialAnimation {
+                    loops: Animation.Infinite
+                    running: root.showLavaBlobs
+                    NumberAnimation {
+                        target: shapeWrapper
+                        property: "y"
+                        to: shapeWrapper.basePosY - shapeWrapper.shapeSize / 2 - modelData.riseY * s
+                        duration: modelData.riseT
+                        easing.type: Easing.InOutSine
+                    }
+                    NumberAnimation {
+                        target: shapeWrapper
+                        property: "y"
+                        to: shapeWrapper.basePosY - shapeWrapper.shapeSize / 2
+                        duration: modelData.riseT
+                        easing.type: Easing.InOutSine
+                    }
+                }
+
+                // Gentle horizontal fluid sway
                 SequentialAnimation {
                     loops: Animation.Infinite
                     running: root.showLavaBlobs
@@ -563,33 +599,21 @@ Rectangle {
                         target: shapeWrapper
                         property: "x"
                         to: shapeWrapper.basePosX - shapeWrapper.shapeSize / 2 + modelData.dx * s
-                        duration: modelData.xT
+                        duration: modelData.swayT
+                        easing.type: Easing.InOutSine
+                    }
+                    NumberAnimation {
+                        target: shapeWrapper
+                        property: "x"
+                        to: shapeWrapper.basePosX - shapeWrapper.shapeSize / 2 - modelData.dx * 0.5 * s
+                        duration: modelData.swayT
                         easing.type: Easing.InOutSine
                     }
                     NumberAnimation {
                         target: shapeWrapper
                         property: "x"
                         to: shapeWrapper.basePosX - shapeWrapper.shapeSize / 2
-                        duration: modelData.xT
-                        easing.type: Easing.InOutSine
-                    }
-                }
-
-                SequentialAnimation {
-                    loops: Animation.Infinite
-                    running: root.showLavaBlobs
-                    NumberAnimation {
-                        target: shapeWrapper
-                        property: "y"
-                        to: shapeWrapper.basePosY - shapeWrapper.shapeSize / 2 + modelData.dy * s
-                        duration: modelData.yT
-                        easing.type: Easing.InOutSine
-                    }
-                    NumberAnimation {
-                        target: shapeWrapper
-                        property: "y"
-                        to: shapeWrapper.basePosY - shapeWrapper.shapeSize / 2
-                        duration: modelData.yT
+                        duration: modelData.swayT
                         easing.type: Easing.InOutSine
                     }
                 }
@@ -605,22 +629,22 @@ Rectangle {
                     running: root.showLavaBlobs
                 }
 
-                // Subtle organic scale breathing
+                // Subtle fluid breathing scale
                 SequentialAnimation {
                     loops: Animation.Infinite
                     running: root.showLavaBlobs
                     NumberAnimation {
                         target: shapeWrapper
                         property: "scale"
-                        to: 1.08
-                        duration: modelData.xT * 0.75
+                        to: 1.05
+                        duration: modelData.riseT * 0.5
                         easing.type: Easing.InOutSine
                     }
                     NumberAnimation {
                         target: shapeWrapper
                         property: "scale"
-                        to: 0.94
-                        duration: modelData.xT * 0.75
+                        to: 0.95
+                        duration: modelData.riseT * 0.5
                         easing.type: Easing.InOutSine
                     }
                 }
