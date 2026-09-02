@@ -117,7 +117,6 @@ Rectangle {
     property real clockScale: 1.0 // 0.6 to 2.2
     property bool clockCardEnabled: false
     property real clockCardOpacity: 0.35 // 0.15 to 0.85
-    property bool clockShowOnLogin: true
 
     // Dynamic Clock Strings (Auto-updated by updateClock())
     property string clockHours: "00"
@@ -500,7 +499,7 @@ Rectangle {
         y: root.getGridY(root.clockGridPos, height, 48 * s, 70 * s)
         width: Math.max(120 * s, clockCard.width * root.clockScale)
         height: Math.max(48 * s, clockCard.height * root.clockScale)
-        opacity: (!root.isUnlocked) ? root.uiOpacity : (root.clockShowOnLogin ? (root.uiOpacity * 0.90) : 0)
+        opacity: (!root.isUnlocked) ? root.uiOpacity : 0
         visible: opacity > 0
         z: 5
 
@@ -2041,56 +2040,6 @@ Rectangle {
                                 }
                             }
 
-                            // 5. Show on Login Toggle
-                            Item {
-                                width: parent.width
-                                height: 32 * s
-
-                                Column {
-                                    anchors.left: parent.left
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    Text {
-                                        text: "Keep Clock Visible on Login"
-                                        font.family: root.sansFont
-                                        font.pixelSize: 12 * s
-                                        font.weight: Font.DemiBold
-                                        color: root.textPrimary
-                                    }
-                                    Text {
-                                        text: "Clock remains visible after unlock"
-                                        font.family: root.sansFont
-                                        font.pixelSize: 10 * s
-                                        color: root.textMuted
-                                    }
-                                }
-
-                                Rectangle {
-                                    anchors.right: parent.right
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    width: 38 * s
-                                    height: 22 * s
-                                    radius: 11 * s
-                                    color: root.clockShowOnLogin ? root.accentColor : Qt.rgba(1, 1, 1, 0.15)
-                                    Behavior on color { ColorAnimation { duration: 180 } }
-
-                                    Rectangle {
-                                        width: 16 * s
-                                        height: 16 * s
-                                        radius: 8 * s
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        x: root.clockShowOnLogin ? parent.width - width - 3 * s : 3 * s
-                                        color: "#ffffff"
-                                        Behavior on x { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-                                    }
-
-                                    MouseArea {
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: root.clockShowOnLogin = !root.clockShowOnLogin
-                                    }
-                                }
-                            }
                         }
 
                         // ══════════════════════════════════════════
