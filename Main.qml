@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Window
 import Qt5Compat.GraphicalEffects
+import QtCore
 import SddmComponents 2.0
 import M3Shapes
 
@@ -10,6 +11,34 @@ Rectangle {
     height: Screen.height
     color: "#030408"
     readonly property real s: height / 768
+
+    // ──────────────────────────────────────────
+    // Persistent Theme Settings (Auto-saves blur, colors & all tweaks to disk!)
+    // ──────────────────────────────────────────
+    Settings {
+        id: persistentSettings
+        category: "BlewhGlassSDDM"
+        property alias colorScheme: root.colorScheme
+        property alias boxStyle: root.boxStyle
+        property alias currentM3Shape: root.currentM3Shape
+        property alias avatarShape: root.avatarShape
+        property alias avatarOrientation: root.avatarOrientation
+        property alias avatarScale: root.avatarScale
+        property alias unlockAnimStyle: root.unlockAnimStyle
+        property alias is12Hour: root.is12Hour
+        property alias showLavaBlobs: root.showLavaBlobs
+        property alias clockStyle: root.clockStyle
+        property alias clockGridPos: root.clockGridPos
+        property alias clockScale: root.clockScale
+        property alias clockCardEnabled: root.clockCardEnabled
+        property alias clockCardOpacity: root.clockCardOpacity
+        property alias loginGridPos: root.loginGridPos
+        property alias loginScale: root.loginScale
+        property alias loginCardEnabled: root.loginCardEnabled
+        property alias loginCardOpacity: root.loginCardOpacity
+        property alias glassBlurEnabled: root.glassBlurEnabled
+        property alias glassBlurRadius: root.glassBlurRadius
+    }
 
     // Wayland mouse cursor fix
     MouseArea {
