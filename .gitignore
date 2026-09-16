@@ -3,3 +3,5 @@
 scratch/
 *.qmlc
 *.jsc
+__pycache__/
+*.pyc
